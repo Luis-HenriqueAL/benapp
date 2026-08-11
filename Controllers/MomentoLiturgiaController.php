@@ -29,29 +29,52 @@ class MomentoLiturgiaController {
      */
     private function ensureSchema() {
         try {
-            $this->conn->exec("
-                CREATE TABLE IF NOT EXISTS momentos_predefinidos (
-                    id SERIAL PRIMARY KEY,
-                    celula_id INT NOT NULL DEFAULT 1,
-                    titulo VARCHAR(255) NOT NULL,
-                    ordem INT NOT NULL DEFAULT 0,
-                    duracao_minutos INT DEFAULT 15,
-                    obrigatorio BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            ");
+            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
+            if ($driver === 'sqlite') {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS momentos_predefinidos (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        celula_id INT NOT NULL DEFAULT 1,
+                        titulo VARCHAR(255) NOT NULL,
+                        ordem INT NOT NULL DEFAULT 0,
+                        duracao_minutos INT DEFAULT 15,
+                        obrigatorio BOOLEAN DEFAULT FALSE,
+                        is_louvor BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                ");
+            } else {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS momentos_predefinidos (
+                        id SERIAL PRIMARY KEY,
+                        celula_id INT NOT NULL DEFAULT 1,
+                        titulo VARCHAR(255) NOT NULL,
+                        ordem INT NOT NULL DEFAULT 0,
+                        duracao_minutos INT DEFAULT 15,
+                        obrigatorio BOOLEAN DEFAULT FALSE,
+                        is_louvor BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                ");
+            }
+
+            try { $this->conn->exec("ALTER TABLE momentos_predefinidos ADD COLUMN is_louvor BOOLEAN DEFAULT FALSE;"); } catch (\PDOException $e) {}
 
             $stmt = $this->conn->prepare("SELECT COUNT(*) FROM momentos_predefinidos WHERE celula_id = 1");
             $stmt->execute();
             if ($stmt->fetchColumn() == 0) {
                 $this->conn->exec("
-                    INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio)
+                    INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio, is_louvor)
                     VALUES
-                    (1, 'Quebra-Gelo / Recepção', 1, 15, FALSE),
-                    (1, 'Louvor e Adoração', 2, 20, FALSE),
-                    (1, 'Estudo / Palavra', 3, 40, TRUE),
-                    (1, 'Oração e Avisos', 4, 15, FALSE);
+                    (1, 'Quebra-Gelo / Recepção', 1, 15, FALSE, FALSE),
+                    (1, 'Louvor e Adoração', 2, 20, FALSE, TRUE),
+                    (1, 'Estudo / Palavra', 3, 40, TRUE, FALSE),
+                    (1, 'Oração e Avisos', 4, 15, FALSE, FALSE);
                 ");
+            } else {
+                try {
+                    $this->conn->exec("UPDATE momentos_predefinidos SET is_louvor = TRUE WHERE (LOWER(titulo) LIKE '%louvor%' OR LOWER(titulo) LIKE '%música%') AND celula_id = 1;");
+                } catch (\PDOException $e) {}
             }
         } catch (\PDOException $e) {
             // Ignora se tabela já existir
@@ -91,6 +114,7 @@ class MomentoLiturgiaController {
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $titulo = trim($_POST['titulo'] ?? '');
+        $is_louvor = !empty($_POST['is_louvor']) ? 1 : 0;
 
         if (empty($titulo)) {
             $_SESSION['flash_error'] = "O nome/descrição do momento é obrigatório.";
@@ -104,13 +128,14 @@ class MomentoLiturgiaController {
         $maxOrdem = (int)$stmtMax->fetchColumn();
 
         $stmt = $this->conn->prepare("
-            INSERT INTO momentos_predefinidos (celula_id, titulo, ordem)
-            VALUES (:celula_id, :titulo, :ordem)
+            INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, is_louvor)
+            VALUES (:celula_id, :titulo, :ordem, :is_louvor)
         ");
         $stmt->execute([
             ':celula_id' => $celula_id,
             ':titulo' => $titulo,
-            ':ordem' => $maxOrdem + 1
+            ':ordem' => $maxOrdem + 1,
+            ':is_louvor' => $is_louvor
         ]);
 
         $_SESSION['flash_success'] = "Momento '{$titulo}' cadastrado com sucesso!";

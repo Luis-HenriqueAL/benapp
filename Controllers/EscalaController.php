@@ -93,6 +93,9 @@ class EscalaController {
         $todosUsuarios = $this->usuarioModel->findByCelulaId($celula_id);
         $visitantesHistorico = $presencaModel->findVisitantesByCelula($celula_id);
 
+        $musicaModel = new \Models\LiturgiaMusica();
+        $musicas = $musicaModel->findByLiturgia($celula_id, $id);
+
         require_once __DIR__ . '/../Views/Escala/show.php';
     }
 

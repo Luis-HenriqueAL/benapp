@@ -226,6 +226,37 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
         header("Location: /escala");
         exit;
     }
+} elseif ($uri === '/escala/musica/adicionar') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $controller = new \Controllers\MusicaController();
+            $controller->store();
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
+} elseif ($uri === '/escala/musica/remover') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $controller = new \Controllers\MusicaController();
+            $controller->delete();
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
+} elseif ($uri === '/escala/cifra') {
+    $controller = new \Controllers\MusicaController();
+    $controller->cifraView();
 } else {
     http_response_code(404);
     $errorMessage = "Página não encontrada (404): " . htmlspecialchars($uri);

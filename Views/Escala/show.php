@@ -115,6 +115,112 @@ ob_start();
         <?php endif; ?>
     </div>
 
+    <!-- Seção de Louvor & Cifras da Liturgia -->
+    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
+                    <span>🎵 Repertório & Cifras de Louvor</span>
+                </h3>
+                <p class="text-[10px] text-slate-400 font-medium"><?= count($musicas ?? []) ?> música(s) vinculada(s)</p>
+            </div>
+            <?php if (!empty($musicas)): ?>
+                <a href="/escala/cifra?liturgia_id=<?= (int)$liturgia['id'] ?>" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-purple-500/20">
+                    <span>Ver Cifras</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            <?php endif; ?>
+        </div>
+
+        <?php if (SecurityHelper::hasPermissao('escala.edit')): ?>
+            <div class="pt-1">
+                <button type="button" onclick="toggleForm('formNovaMusica')" class="w-full py-2.5 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Adicionar Música (Cifra Club)
+                </button>
+            </div>
+
+            <!-- Formulário para Inserir Música -->
+            <div id="formNovaMusica" class="hidden bg-purple-50/70 rounded-2xl p-4 border border-purple-100 space-y-3">
+                <h4 class="text-xs font-extrabold text-purple-900">Vincular Nova Música</h4>
+                <form action="/escala/musica/adicionar" method="POST" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                    
+                    <div>
+                        <label for="cifraclub_url" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Link do Cifra Club (Recomendado)</label>
+                        <input id="cifraclub_url" type="url" name="cifraclub_url" placeholder="Ex: https://www.cifraclub.com.br/artista/musica/" class="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        <p class="text-[10px] text-purple-600/80 mt-1">Cole o link da cifra para buscar a letra e os acordes automaticamente.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="titulo_musica" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Título da Música</label>
+                            <input id="titulo_musica" type="text" name="titulo" placeholder="Ex: Lugar Secreto" class="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        </div>
+                        <div>
+                            <label for="artista_musica" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Artista / Banda</label>
+                            <input id="artista_musica" type="text" name="artista" placeholder="Ex: Gabriela Rocha" class="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="tom_musica" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Tom da Música</label>
+                        <input id="tom_musica" type="text" name="tom" placeholder="Ex: G, C#, Fm" class="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    </div>
+
+                    <div class="flex gap-2 justify-end pt-1">
+                        <button type="button" onclick="toggleForm('formNovaMusica')" class="px-3 py-2 text-xs font-bold text-purple-600 hover:text-purple-800">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Salvar Música</button>
+                    </div>
+                </form>
+            </div>
+        <?php endif; ?>
+
+        <!-- Lista de Músicas Vinculadas -->
+        <?php if (!empty($musicas)): ?>
+            <div class="space-y-2">
+                <?php foreach ($musicas as $mus): ?>
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-purple-50/50 border border-purple-100 hover:bg-purple-50 transition">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 font-bold text-sm flex items-center justify-center shrink-0">
+                                🎵
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-900 truncate"><?= SecurityHelper::e($mus['titulo']) ?></h4>
+                                <p class="text-[10px] text-slate-400 font-medium truncate">
+                                    <?= SecurityHelper::e($mus['artista'] ?? 'Artista não informado') ?>
+                                    <?php if (!empty($mus['tom'])): ?>
+                                        • <span class="font-extrabold text-purple-700">Tom: <?= SecurityHelper::e($mus['tom']) ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <a href="/escala/cifra?id=<?= $mus['id'] ?>" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] transition active:scale-95 shadow-xs">
+                                Ver Cifra
+                            </a>
+
+                            <?php if (SecurityHelper::hasPermissao('escala.edit')): ?>
+                                <form action="/escala/musica/remover" method="POST" data-confirm="Deseja remover esta música da liturgia?">
+                                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                                    <input type="hidden" name="id" value="<?= (int)$mus['id'] ?>">
+                                    <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Remover música">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-xs text-slate-400 text-center py-2 italic">Nenhuma música adicionada ao louvor ainda.</p>
+        <?php endif; ?>
+    </div>
+
     <!-- Seção de Presenças e Visitantes -->
     <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
         <div class="flex items-center justify-between">
