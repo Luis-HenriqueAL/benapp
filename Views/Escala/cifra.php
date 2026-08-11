@@ -220,8 +220,8 @@ function startAutoScroll() {
     }
     if (label) label.textContent = 'Parar Autorolagem';
 
-    // scrollSpeedLevel 1-10: intervalo de 80ms (rápido) a 800ms (lento)
-    const intervalMs = Math.round(800 / scrollSpeedLevel);
+    // scrollSpeedLevel 1-10: autorolagem mais rápida em todos os níveis (ex: nível 1 = 120ms, nível 10 = 12ms)
+    const intervalMs = Math.max(10, Math.round(120 / (scrollSpeedLevel * 0.9)));
     autoScrollTimer = setInterval(() => {
         window.scrollBy({ top: 1, behavior: 'instant' });
         if ((window.scrollY + window.innerHeight) >= document.body.scrollHeight - 10) {
