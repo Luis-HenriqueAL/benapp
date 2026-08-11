@@ -2,31 +2,26 @@
 
 namespace Services;
 
+/**
+ * Class NotificationService
+ * Serviço de envio de notificações de escalas via E-mail e SMS.
+ */
 class NotificationService {
-    
-    public function sendEscalaNotification($usuario, $escala_detalhes) {
-        $message = "Olá {$usuario['nome']}, você foi escalado para a função: {$escala_detalhes['funcao']} no dia {$escala_detalhes['data_culto']}.";
-        
-        // Mock de envio de E-mail
-        if (!empty($usuario['email'])) {
-            $this->sendEmail($usuario['email'], "Aviso: Nova Escala", $message);
-        }
-        
-        // Mock de envio de SMS/WhatsApp
-        if (!empty($usuario['telefone'])) {
-            $this->sendSMS($usuario['telefone'], $message);
-        }
-    }
 
-    private function sendEmail($to, $subject, $message) {
-        // Exemplo mockado (poderia usar PHPMailer futuramente)
-        error_log("MOCK EMAIL -> Para: $to | Assunto: $subject | Mensagem: $message");
-        return true;
-    }
+    /**
+     * Dispara notificação de convocação de escala para o voluntário (mock).
+     *
+     * @param array $usuario Dados do usuário (nome, email, telefone).
+     * @param array $escala Dados da escala (funcao, data_culto).
+     * @return bool Retorna verdadeiro indicando envio bem-sucedido.
+     */
+    public function sendEscalaNotification($usuario, $escala) {
+        $message = "Olá {$usuario['nome']}, você foi escalado para {$escala['funcao']} na data {$escala['data_culto']}.";
+        
+        // Mock de envio de e-mail e SMS (registrado nos logs do PHP)
+        error_log("[EMAIL SENT] To: {$usuario['email']} | Message: $message");
+        error_log("[SMS SENT] To: {$usuario['telefone']} | Message: $message");
 
-    private function sendSMS($to, $message) {
-        // Exemplo mockado (poderia integrar com API Twilio/Zenvia futuramente)
-        error_log("MOCK SMS -> Para: $to | Mensagem: $message");
         return true;
     }
 }

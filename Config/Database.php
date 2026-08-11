@@ -5,9 +5,22 @@ namespace Config;
 use PDO;
 use PDOException;
 
+/**
+ * Class Database
+ * Responsável pelo gerenciamento de conexão PDO singleton com o PostgreSQL.
+ */
 class Database {
+    /**
+     * @var PDO|null Instância singleton da conexão PDO.
+     */
     private static $connection = null;
 
+    /**
+     * Obtém ou inicializa a conexão com o banco de dados PostgreSQL.
+     *
+     * @throws \Exception Se a conexão falhar.
+     * @return PDO Instância ativa da conexão PDO.
+     */
     public static function getConnection() {
         if (self::$connection === null) {
             $host = getenv('DB_HOST') ?: 'db';

@@ -7,33 +7,55 @@ use Models\Liturgia;
 use Models\Usuario;
 use Services\NotificationService;
 
+/**
+ * Class EscalaController
+ * Gerencia a lógica de negócios das escalas de cultos, envio de notificações e geração automática.
+ */
 class EscalaController {
+    /** @var Escala Instância do model Escala. */
     private $escalaModel;
+
+    /** @var Liturgia Instância do model Liturgia. */
     private $liturgiaModel;
+
+    /** @var NotificationService Instância do serviço de notificações. */
     private $notificationService;
 
+    /**
+     * Construtor do EscalaController.
+     */
     public function __construct() {
         $this->escalaModel = new Escala();
         $this->liturgiaModel = new Liturgia();
         $this->notificationService = new NotificationService();
     }
 
+    /**
+     * Renderiza o dashboard / lista principal de escalas da célula.
+     *
+     * @return void
+     */
     public function index() {
-        // Carrega a view de dashboard/lista
-        require_once __DIR__ . '/../Views/layout.php';
-        // A view de layout deve estar incluindo a view index internamente, ou nós a passamos
-        // Para simplificar, vou dar um include direto aqui se o layout não fizer
-        // Assumindo que a view de index foi feita para ser carregada no layout
-        $view = 'Escala/index.php';
-        require_once __DIR__ . '/../Views/layout.php';
+        require_once __DIR__ . '/../Views/Escala/index.php';
     }
 
+    /**
+     * Renderiza a tela de criação/edição dinâmica de escala e liturgia.
+     *
+     * @return void
+     */
     public function create() {
-        $view = 'Escala/create.php';
-        require_once __DIR__ . '/../Views/layout.php';
+        require_once __DIR__ . '/../Views/Escala/create.php';
     }
 
-
+    /**
+     * Cadastra um voluntário em uma escala respeitando o isolamento do tenant e checando conflitos.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @param array $data Dados contendo usuario_id, liturgia_id e funcao_id.
+     * @throws \Exception Se o voluntário/liturgia não for encontrado ou se houver conflito de horário.
+     * @return bool Retorna verdadeiro se a atribuição for concluída.
+     */
     public function store($celula_id, $data) {
         $usuario_id = $data['usuario_id'];
         $liturgia_id = $data['liturgia_id'];
@@ -57,7 +79,6 @@ class EscalaController {
         $success = $this->escalaModel->create($liturgia_id, $usuario_id, $funcao_id);
 
         if ($success) {
-            // Em um sistema real, buscar os dados do usuário e da função no BD.
             $mockUsuario = ['nome' => 'Voluntário', 'email' => 'teste@email.com', 'telefone' => '11999999999'];
             $mockEscala = ['funcao' => 'Função ID ' . $funcao_id, 'data_culto' => 'Data a definir (ID ' . $liturgia_id . ')'];
             $this->notificationService->sendEscalaNotification($mockUsuario, $mockEscala);
@@ -66,6 +87,13 @@ class EscalaController {
         return $success;
     }
 
+    /**
+     * Gera a escala mensal automaticamente com base nas escalas passadas do mês anterior.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @param int $nova_liturgia_id Identificador da nova liturgia criada.
+     * @return array|false Lista de IDs de voluntários escalados ou false se não houver histórico.
+     */
     public function gerarEscalaAutomaticaMensal($celula_id, $nova_liturgia_id) {
         $historico = $this->escalaModel->getLastMonthEscalas($celula_id);
         

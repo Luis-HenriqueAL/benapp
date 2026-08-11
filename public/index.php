@@ -85,49 +85,19 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
     $controller->index();
 } elseif ($uri === '/usuarios/create') {
     $controller = new \Controllers\UsuarioController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        try {
-            \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
-            $controller->store($_SESSION['celula_id'], $_POST);
-        } catch (\Exception $e) {
-            $_SESSION['flash_error'] = $e->getMessage();
-            header("Location: /usuarios/create");
-            exit;
-        }
-    } else {
-        $controller->create();
-    }
+    $controller->create();
+} elseif ($uri === '/usuarios/store') {
+    $controller = new \Controllers\UsuarioController();
+    $controller->store();
 } elseif ($uri === '/usuarios/edit') {
     $controller = new \Controllers\UsuarioController();
-    $id = $_GET['id'] ?? null;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        try {
-            \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
-            $controller->update($_SESSION['celula_id'], $id, $_POST);
-        } catch (\Exception $e) {
-            $_SESSION['flash_error'] = $e->getMessage();
-            header("Location: /usuarios/edit?id=" . urlencode($id));
-            exit;
-        }
-    } else {
-        $controller->edit($id);
-    }
+    $controller->edit();
+} elseif ($uri === '/usuarios/update') {
+    $controller = new \Controllers\UsuarioController();
+    $controller->update();
 } elseif ($uri === '/usuarios/delete') {
     $controller = new \Controllers\UsuarioController();
-    $id = $_GET['id'] ?? null;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        try {
-            \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
-            $controller->delete($_SESSION['celula_id'], $id);
-        } catch (\Exception $e) {
-            $_SESSION['flash_error'] = $e->getMessage();
-            header("Location: /usuarios");
-            exit;
-        }
-    } else {
-        header("Location: /usuarios");
-        exit;
-    }
+    $controller->delete();
 } else {
     http_response_code(404);
     $_SESSION['flash_error'] = "Página não encontrada (404).";
