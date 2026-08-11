@@ -128,10 +128,25 @@ class MusicaController {
         $celula_id   = $_SESSION['celula_id'] ?? 1;
         $liturgia_id = (int)($_GET['liturgia_id'] ?? 0);
         $musica_id   = (int)($_GET['id'] ?? 0);
+        $musicaInicial = 0; // índice da música a exibir primeiro
 
         if ($musica_id) {
+            // Busca a música para obter o liturgia_id dela e carregar toda a liturgia
             $musica = $this->musicaModel->findById($celula_id, $musica_id);
-            $musicas = $musica ? [$musica] : [];
+            if (!$musica) {
+                $_SESSION['flash_error'] = "Música não encontrada.";
+                header("Location: /escala");
+                exit;
+            }
+            $liturgia_id = (int)$musica['liturgia_id'];
+            $musicas = $this->musicaModel->findByLiturgia($celula_id, $liturgia_id);
+            // Descobre o índice da música solicitada
+            foreach ($musicas as $idx => $m) {
+                if ((int)$m['id'] === $musica_id) {
+                    $musicaInicial = $idx;
+                    break;
+                }
+            }
         } elseif ($liturgia_id) {
             $musicas = $this->musicaModel->findByLiturgia($celula_id, $liturgia_id);
         } else {
