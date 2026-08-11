@@ -21,61 +21,6 @@ class Usuario {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação da tabela e colunas necessárias no banco de dados.
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS usuarios (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        nome VARCHAR(255) NOT NULL,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        senha VARCHAR(255) NOT NULL,
-                        perfil VARCHAR(50) DEFAULT 'MEMBRO',
-                        status VARCHAR(20) DEFAULT 'ativo'
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS usuarios (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        nome VARCHAR(255) NOT NULL,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        senha VARCHAR(255) NOT NULL,
-                        perfil VARCHAR(50) DEFAULT 'MEMBRO',
-                        status VARCHAR(20) DEFAULT 'ativo'
-                    );
-                ");
-
-                $this->conn->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(255) UNIQUE;");
-                $this->conn->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS senha VARCHAR(255);");
-                $this->conn->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil VARCHAR(50) DEFAULT 'MEMBRO';");
-                $this->conn->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ativo';");
-            }
-
-            // Garante a existência do usuário admin padrão
-            $admin = $this->findByEmail('admin@celula.com');
-            if (!$admin) {
-                $hash = password_hash('senha123', PASSWORD_BCRYPT);
-                $stmtInsert = $this->conn->prepare("
-                    INSERT INTO usuarios (celula_id, nome, email, senha, perfil, status)
-                    VALUES (1, 'Líder Principal', 'admin@celula.com', :hash, 'LIDER', 'ativo')
-                ");
-                $stmtInsert->execute([':hash' => $hash]);
-            }
-        } catch (\PDOException $e) {
-            // Ignora exceções de estrutura existente
-        }
     }
 
     /**

@@ -25,45 +25,6 @@ class Liturgia {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação da tabela e colunas data_culto, data_liturgia e tema no PostgreSQL / SQLite.
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS liturgias (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
-                        data_liturgia DATE,
-                        tema VARCHAR(255)
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS liturgias (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
-                        data_liturgia DATE,
-                        tema VARCHAR(255)
-                    );
-                ");
-
-                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS data_culto DATE DEFAULT CURRENT_DATE;");
-                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS data_liturgia DATE;");
-                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS tema VARCHAR(255);");
-            }
-        } catch (\PDOException $e) {
-            // Ignora se tabela/coluna já existir
-        }
     }
 
     /**

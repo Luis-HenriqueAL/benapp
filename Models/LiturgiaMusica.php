@@ -139,4 +139,30 @@ class LiturgiaMusica {
         $stmt->execute([':id' => $id, ':celula_id' => $celula_id]);
         return $stmt->rowCount() > 0;
     }
+
+    /**
+     * Atualiza o cache da cifra, tom e artista de uma música no banco.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @param int $id ID da música.
+     * @param string $cifra_texto Texto da cifra extraída.
+     * @param string|null $tom Tom da música.
+     * @param string|null $artista Nome do artista.
+     * @return bool
+     */
+    public function updateCifraCache($celula_id, $id, $cifra_texto, $tom = null, $artista = null) {
+        $query = "UPDATE {$this->table_name} 
+                  SET cifra_texto = :cifra_texto, 
+                      tom = COALESCE(NULLIF(:tom, ''), tom), 
+                      artista = COALESCE(NULLIF(:artista, ''), artista) 
+                  WHERE id = :id AND celula_id = :celula_id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':cifra_texto' => $cifra_texto,
+            ':tom'         => $tom,
+            ':artista'     => $artista,
+            ':id'          => $id,
+            ':celula_id'   => $celula_id
+        ]);
+    }
 }

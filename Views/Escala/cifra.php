@@ -90,9 +90,17 @@ ob_start();
                             <pre class="cifra-box font-mono text-xs md:text-sm leading-relaxed overflow-x-auto p-4 bg-slate-900 text-emerald-400 rounded-2xl shadow-inner border border-slate-800 selection:bg-purple-600 selection:text-white whitespace-pre font-bold tracking-wider"><?= SecurityHelper::e($m['cifra_texto']) ?></pre>
                         </div>
                     <?php else: ?>
-                        <p class="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            Letra/cifra não inserida. Consulte o link do Cifra Club acima.
-                        </p>
+                        <div class="bg-slate-50 rounded-2xl p-6 text-center space-y-3 border border-slate-100">
+                            <p class="text-xs text-slate-500 font-medium">
+                                A cifra ainda não foi armazenada em cache para esta música.
+                            </p>
+                            <?php if (!empty($m['cifraclub_url'])): ?>
+                                <a href="?id=<?= $m['id'] ?>&force_refresh=1" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-xs transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    <span>Buscar / Atualizar Cifra no Cifra Club</span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

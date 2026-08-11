@@ -21,61 +21,6 @@ class Celula {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação da tabela de células e estruturas no banco de dados.
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS celulas_info (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL UNIQUE,
-                        nome VARCHAR(255) NOT NULL,
-                        dia_semana VARCHAR(50),
-                        horario TIME,
-                        cep VARCHAR(10),
-                        logradouro VARCHAR(255),
-                        numero VARCHAR(20),
-                        complemento VARCHAR(100),
-                        bairro VARCHAR(100),
-                        cidade VARCHAR(100),
-                        estado VARCHAR(2),
-                        anfitrioes TEXT,
-                        lideres TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS celulas_info (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL UNIQUE,
-                        nome VARCHAR(255) NOT NULL,
-                        dia_semana VARCHAR(50),
-                        horario TIME,
-                        cep VARCHAR(10),
-                        logradouro VARCHAR(255),
-                        numero VARCHAR(20),
-                        complemento VARCHAR(100),
-                        bairro VARCHAR(100),
-                        cidade VARCHAR(100),
-                        estado VARCHAR(2),
-                        anfitrioes JSONB DEFAULT '[]'::jsonb,
-                        lideres JSONB DEFAULT '[]'::jsonb,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-            }
-        } catch (\PDOException $e) {
-            // Ignora se tabela já existir
-        }
     }
 
     /**

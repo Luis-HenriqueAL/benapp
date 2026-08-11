@@ -7,7 +7,7 @@ use PDOException;
 
 /**
  * Class Database
- * Responsável pelo gerenciamento de conexão PDO singleton com o PostgreSQL.
+ * Responsável pelo gerenciamento de conexão PDO singleton com o PostgreSQL e SQLite.
  */
 class Database {
     /**
@@ -42,6 +42,7 @@ class Database {
                             PDO::ATTR_EMULATE_PREPARES   => false,
                         ];
                         self::$connection = new PDO($dsn, $user, $pass, $options);
+                        self::initializeDbIfEmpty(self::$connection, 'pgsql');
                         return self::$connection;
                     } catch (PDOException $e) {
                         // Tenta a próxima combinação de host/usuário
@@ -61,7 +62,39 @@ class Database {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ];
             self::$connection = new PDO($dsn, null, null, $options);
+            self::initializeDbIfEmpty(self::$connection, 'sqlite');
         }
         return self::$connection;
+    }
+
+    /**
+     * Executa o script DDL centralizado na pasta db/ apenas se o banco for novo e não possuir tabelas.
+     *
+     * @param PDO $conn Conexão PDO ativa.
+     * @param string $driver Nome do driver PDO ('pgsql' ou 'sqlite').
+     * @return void
+     */
+    private static function initializeDbIfEmpty(PDO $conn, $driver) {
+        try {
+            if ($driver === 'sqlite') {
+                $stmt = $conn->query("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'");
+                if (!$stmt || !$stmt->fetch()) {
+                    $sql = @file_get_contents(__DIR__ . '/../db/schema_sqlite.sql');
+                    if ($sql) {
+                        $conn->exec($sql);
+                    }
+                }
+            } else {
+                $stmt = $conn->query("SELECT to_regclass('public.usuarios')");
+                if (!$stmt || !$stmt->fetchColumn()) {
+                    $sql = @file_get_contents(__DIR__ . '/../db/init.sql');
+                    if ($sql) {
+                        $conn->exec($sql);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignora erro se tabelas já existirem
+        }
     }
 }

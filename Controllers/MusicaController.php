@@ -140,6 +140,26 @@ class MusicaController {
             exit;
         }
 
+        $forceRefresh = isset($_GET['force_refresh']) && $_GET['force_refresh'] == '1';
+
+        // Tenta auto-carregar e atualizar no banco se cifra_texto estiver vazio ou force_refresh=1
+        foreach ($musicas as &$mus) {
+            if (($forceRefresh || empty($mus['cifra_texto'])) && !empty($mus['cifraclub_url'])) {
+                $fetched = $this->cifraClubService->fetchByUrl($mus['cifraclub_url']);
+                if ($fetched && !empty($fetched['cifra'])) {
+                    $mus['cifra_texto'] = $fetched['cifra'];
+                    if (empty($mus['tom']) && !empty($fetched['tom'])) {
+                        $mus['tom'] = $fetched['tom'];
+                    }
+                    if (empty($mus['artista']) && !empty($fetched['artist'])) {
+                        $mus['artista'] = $fetched['artist'];
+                    }
+                    $this->musicaModel->updateCifraCache($celula_id, (int)$mus['id'], $mus['cifra_texto'], $mus['tom'], $mus['artista']);
+                }
+            }
+        }
+        unset($mus);
+
         require_once __DIR__ . '/../Views/Escala/cifra.php';
     }
 }

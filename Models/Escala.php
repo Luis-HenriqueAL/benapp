@@ -25,48 +25,6 @@ class Escala {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação e adequação de colunas da tabela escalas.
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS escalas (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        liturgia_id INT NOT NULL,
-                        usuario_id INT NOT NULL,
-                        funcao_id VARCHAR(100) NOT NULL,
-                        data_escala TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS escalas (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        liturgia_id INT NOT NULL,
-                        usuario_id INT NOT NULL,
-                        funcao_id VARCHAR(100) NOT NULL,
-                        data_escala TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-                $this->conn->exec("ALTER TABLE escalas ADD COLUMN IF NOT EXISTS usuario_id INT;");
-                $this->conn->exec("ALTER TABLE escalas ADD COLUMN IF NOT EXISTS funcao_id VARCHAR(100);");
-                $this->conn->exec("ALTER TABLE escalas ADD COLUMN IF NOT EXISTS celula_id INT DEFAULT 1;");
-                $this->conn->exec("ALTER TABLE escalas ALTER COLUMN data_escala SET DEFAULT CURRENT_TIMESTAMP;");
-                $this->conn->exec("ALTER TABLE escalas ALTER COLUMN data_escala DROP NOT NULL;");
-            }
-        } catch (\PDOException $e) {
-            // Ignora se tabela/coluna já existir
-        }
     }
 
     /**

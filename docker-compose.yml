@@ -5,8 +5,12 @@ services:
       - "8080:80"
     volumes:
       - .:/var/www/html
+    environment:
+      - CIFRACLUB_API_URL=http://cifraclub-api:3000
     depends_on:
       - db
+      - cifraclub-api
+
   db:
     image: postgres:15-alpine
     environment:
@@ -17,3 +21,10 @@ services:
       - "5432:5432"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  cifraclub-api:
+    build: ./services/cifraclub-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000

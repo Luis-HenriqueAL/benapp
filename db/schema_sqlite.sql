@@ -1,8 +1,7 @@
--- Script SQL oficial de inicializacao do PostgreSQL (Multi-tenant)
--- Todas as tabelas e schemas estao centralizados exclusivamente neste diretorio (db/)
+-- Script SQL oficial de inicializacao do SQLite (Desenvolvimento Local XAMPP/Windows)
 
 CREATE TABLE IF NOT EXISTS celulas_info (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL UNIQUE,
     nome VARCHAR(255) NOT NULL,
     dia_semana VARCHAR(50),
@@ -14,13 +13,13 @@ CREATE TABLE IF NOT EXISTS celulas_info (
     bairro VARCHAR(100),
     cidade VARCHAR(100),
     estado VARCHAR(2),
-    anfitrioes JSONB DEFAULT '[]'::jsonb,
-    lideres JSONB DEFAULT '[]'::jsonb,
+    anfitrioes TEXT DEFAULT '[]',
+    lideres TEXT DEFAULT '[]',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS usuarios (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -30,25 +29,25 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 CREATE TABLE IF NOT EXISTS perfis (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     nome VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
     descricao TEXT,
     is_native BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_perfil_slug UNIQUE (celula_id, slug)
+    UNIQUE (celula_id, slug)
 );
 
 CREATE TABLE IF NOT EXISTS perfil_permissoes (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     perfil_id INT NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
     permissao VARCHAR(100) NOT NULL,
-    CONSTRAINT uq_perfil_permissao UNIQUE (perfil_id, permissao)
+    UNIQUE (perfil_id, permissao)
 );
 
 CREATE TABLE IF NOT EXISTS liturgias (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
     data_liturgia DATE,
@@ -56,7 +55,7 @@ CREATE TABLE IF NOT EXISTS liturgias (
 );
 
 CREATE TABLE IF NOT EXISTS momentos_liturgia (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL REFERENCES liturgias(id) ON DELETE CASCADE,
     tipo VARCHAR(100) NOT NULL,
@@ -64,7 +63,7 @@ CREATE TABLE IF NOT EXISTS momentos_liturgia (
 );
 
 CREATE TABLE IF NOT EXISTS momentos_predefinidos (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     titulo VARCHAR(255) NOT NULL,
     ordem INT NOT NULL DEFAULT 0,
@@ -75,7 +74,7 @@ CREATE TABLE IF NOT EXISTS momentos_predefinidos (
 );
 
 CREATE TABLE IF NOT EXISTS escalas (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL REFERENCES liturgias(id) ON DELETE CASCADE,
     usuario_id INT,
@@ -84,7 +83,7 @@ CREATE TABLE IF NOT EXISTS escalas (
 );
 
 CREATE TABLE IF NOT EXISTS presencas (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL,
     usuario_id INT NULL,
@@ -96,7 +95,7 @@ CREATE TABLE IF NOT EXISTS presencas (
 );
 
 CREATE TABLE IF NOT EXISTS liturgia_musicas (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL REFERENCES liturgias(id) ON DELETE CASCADE,
     momento_titulo VARCHAR(255) NULL,
@@ -108,31 +107,6 @@ CREATE TABLE IF NOT EXISTS liturgia_musicas (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Triggers
-CREATE OR REPLACE FUNCTION trg_liturgia_estudo() RETURNS trigger AS $$
-BEGIN
-    INSERT INTO momentos_liturgia (celula_id, liturgia_id, tipo, detalhes)
-    VALUES (NEW.celula_id, NEW.id, 'estudo', 'Momento de estudo obrigatório');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS t_liturgia_estudo ON liturgias;
-CREATE TRIGGER t_liturgia_estudo
-AFTER INSERT ON liturgias
-FOR EACH ROW EXECUTE FUNCTION trg_liturgia_estudo();
-
 -- Seeds Iniciais
-INSERT INTO usuarios (celula_id, nome, email, senha, perfil)
-VALUES 
-(1, 'Líder Principal', 'admin@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'LIDER'),
-(1, 'Voluntário João', 'joao@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'MEMBRO')
-ON CONFLICT (email) DO NOTHING;
-
-INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio, is_louvor)
-VALUES
-(1, 'Quebra-Gelo / Recepção', 1, 15, FALSE, FALSE),
-(1, 'Louvor e Adoração', 2, 20, FALSE, TRUE),
-(1, 'Estudo / Palavra', 3, 40, TRUE, FALSE),
-(1, 'Oração e Avisos', 4, 15, FALSE, FALSE)
-ON CONFLICT DO NOTHING;
+INSERT OR IGNORE INTO usuarios (celula_id, nome, email, senha, perfil)
+VALUES (1, 'Líder Principal', 'admin@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'LIDER');
