@@ -1,6 +1,6 @@
 <?php
 /**
- * View: Visualizador Responsivo de Cifras e Letras (Cifra Club com Transposição)
+ * View: Visualizador Responsivo de Cifras e Letras (Cifra Club com Transposição e Modo Apenas Letra)
  * 
  * Interface para músicos e membros acompanharem as cifras e letras
  * selecionadas pelo líder para o encontro de célula.
@@ -15,7 +15,7 @@ ob_start();
 ?>
 <div class="space-y-5 max-w-2xl mx-auto pb-10">
     <!-- Header do Visualizador -->
-    <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between">
+    <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center space-x-3.5">
             <a href="javascript:history.back()" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-purple-50 text-slate-600 hover:text-purple-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para a escala">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
@@ -28,10 +28,21 @@ ob_start();
             </div>
         </div>
         
-        <!-- Controles de Tamanho de Fonte -->
-        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-            <button type="button" onclick="alterarFonte(-1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs shadow-xs transition active:scale-90 flex items-center justify-center" title="Diminuir fonte">A-</button>
-            <button type="button" onclick="alterarFonte(1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs shadow-xs transition active:scale-90 flex items-center justify-center" title="Aumentar fonte">A+</button>
+        <!-- Alternador de Modo (Cifra + Letra vs Apenas Letra) + Tamanho de Fonte -->
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 bg-purple-50 p-1 rounded-2xl border border-purple-100">
+                <button id="btn-modo-cifra" type="button" onclick="setModoExibicao('cifra')" class="px-3 py-1.5 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-xs transition active:scale-95 flex items-center gap-1">
+                    <span>🎼 Cifra</span>
+                </button>
+                <button id="btn-modo-letra" type="button" onclick="setModoExibicao('letra')" class="px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95 flex items-center gap-1">
+                    <span>📝 Apenas Letra</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                <button type="button" onclick="alterarFonte(-1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs shadow-xs transition active:scale-90 flex items-center justify-center" title="Diminuir fonte">A-</button>
+                <button type="button" onclick="alterarFonte(1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs shadow-xs transition active:scale-90 flex items-center justify-center" title="Aumentar fonte">A+</button>
+            </div>
         </div>
     </div>
 
@@ -83,7 +94,7 @@ ob_start();
 
                     <!-- Painel Interativo de Transposição de Tom -->
                     <?php if (!empty($m['cifra_texto'])): ?>
-                        <div class="bg-amber-50/70 border border-amber-200/80 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-2.5">
+                        <div id="painel-tom-<?= $musicaId ?>" class="bg-amber-50/70 border border-amber-200/80 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-2.5">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-extrabold text-amber-900 flex items-center gap-1">
                                     <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 .895-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 .895-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
@@ -131,6 +142,37 @@ ob_start();
 </div>
 
 <script>
+// Modo de Exibição (Cifra + Letra VS Apenas Letra)
+let modoExibicaoAtual = 'cifra';
+
+function setModoExibicao(modo) {
+    modoExibicaoAtual = modo;
+    
+    const btnCifra = document.getElementById('btn-modo-cifra');
+    const btnLetra = document.getElementById('btn-modo-letra');
+
+    if (modo === 'letra') {
+        btnCifra.className = "px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95 flex items-center gap-1";
+        btnLetra.className = "px-3 py-1.5 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-xs transition active:scale-95 flex items-center gap-1";
+    } else {
+        btnCifra.className = "px-3 py-1.5 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-xs transition active:scale-95 flex items-center gap-1";
+        btnLetra.className = "px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95 flex items-center gap-1";
+    }
+
+    // Exibe ou oculta painéis de transposição de tom no modo apenas letra
+    document.querySelectorAll('[id^="painel-tom-"]').forEach(painel => {
+        painel.style.display = modo === 'letra' ? 'none' : 'flex';
+    });
+
+    // Re-aplica a renderização para cada música
+    document.querySelectorAll('.cifra-box').forEach(preElem => {
+        const id = preElem.id.replace('cifra-pre-', '');
+        if (id) {
+            aplicarTransposicao(id);
+        }
+    });
+}
+
 // Controle de Tamanho de Fonte
 let currentFontSize = 13;
 function alterarFonte(delta) {
@@ -164,7 +206,6 @@ function transposeNoteName(note, semitones) {
 }
 
 function transposeChordToken(chord, semitones) {
-    // Substitui cada nota (raiz e nota de baixo após barra e.g. G/B -> A/C#)
     return chord.replace(/([A-G][#b]?)/g, function(match) {
         return transposeNoteName(match, semitones);
     });
@@ -190,7 +231,6 @@ function isChordLine(line) {
     const words = trimmed.split(/\s+/);
     if (words.length === 0) return false;
 
-    // Testador de sintaxe de acorde (ex: C, C#m, G/B, F#m7(9), Bb7+)
     const chordPattern = /^[A-G][#b]?(m|maj|min|dim|aug|sus|add|M|[0-9]|\+|\-|\(|\))*(\/[A-G][#b]?)?$/i;
 
     let chordCount = 0;
@@ -214,31 +254,34 @@ function aplicarTransposicao(id) {
     const originalText = preElem.getAttribute('data-original-text') || '';
     const originalTom  = tomElem ? (tomElem.getAttribute('data-original-tom') || 'C') : 'C';
 
-    // Transpõe a nota do Tom no cabeçalho
     if (tomElem) {
         tomElem.textContent = transposeNoteName(originalTom, offset);
     }
 
-    if (offset === 0) {
-        preElem.textContent = originalText;
-        return;
-    }
-
-    // Processa linha por linha aplicando transposição em linhas de acordes
     const lines = originalText.split('\n');
     const chordTokenRegex = /([A-G][#b]?)(m|maj|min|dim|aug|sus|add|M|[0-9]|\+|\-|\(|\))*(\/([A-G][#b]?))?/g;
 
-    const transposedLines = lines.map(line => {
-        if (isChordLine(line)) {
-            return line.replace(chordTokenRegex, function(match) {
-                // Transpõe a raiz e a nota de baixo do acorde
-                return transposeChordToken(match, offset);
+    let processedLines = [];
+
+    if (modoExibicaoAtual === 'letra') {
+        // No modo apenas letra, remove todas as linhas de acordes
+        processedLines = lines.filter(line => !isChordLine(line));
+    } else {
+        if (offset === 0) {
+            processedLines = lines;
+        } else {
+            processedLines = lines.map(line => {
+                if (isChordLine(line)) {
+                    return line.replace(chordTokenRegex, function(match) {
+                        return transposeChordToken(match, offset);
+                    });
+                }
+                return line;
             });
         }
-        return line;
-    });
+    }
 
-    preElem.textContent = transposedLines.join('\n');
+    preElem.textContent = processedLines.join('\n');
 }
 </script>
 
