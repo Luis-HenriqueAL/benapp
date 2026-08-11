@@ -19,8 +19,9 @@ class NotificationService {
         $message = "Olá {$usuario['nome']}, você foi escalado para {$escala['funcao']} na data {$escala['data_culto']}.";
         
         // Mock de envio de e-mail e SMS (registrado nos logs do PHP)
+        $telefone = $usuario['telefone'] ?? 'N/A';
         error_log("[EMAIL SENT] To: {$usuario['email']} | Message: $message");
-        error_log("[SMS SENT] To: {$usuario['telefone']} | Message: $message");
+        error_log("[SMS SENT] To: {$telefone} | Message: $message");
 
         return true;
     }

@@ -32,6 +32,12 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = str_replace('/public', '', $uri);
 
+// Ignora ativos estáticos e favicon para não gerar erro ou redirecionamento em segundo plano
+if (preg_match('/\.(ico|png|jpg|jpeg|svg|css|js|map|woff|woff2|ttf)$/i', $uri)) {
+    http_response_code(404);
+    exit;
+}
+
 // Rotas públicas
 if ($uri === '/login') {
     $controller = new \Controllers\AuthController();
@@ -66,6 +72,9 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
     $controller->index();
 } elseif ($uri === '/escala/create') {
     $controller = new \Controllers\EscalaController();
+    $controller->create();
+} elseif ($uri === '/escala/store') {
+    $controller = new \Controllers\EscalaController();
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
@@ -80,6 +89,10 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
     } else {
         $controller->create();
     }
+} elseif (preg_match('/^\/escala\/\d+$/', $uri)) {
+    // Rota de visualização de escala específica (ex: /escala/1)
+    $controller = new \Controllers\EscalaController();
+    $controller->index();
 } elseif ($uri === '/usuarios') {
     $controller = new \Controllers\UsuarioController();
     $controller->index();
@@ -98,9 +111,15 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
 } elseif ($uri === '/usuarios/delete') {
     $controller = new \Controllers\UsuarioController();
     $controller->delete();
+} elseif ($uri === '/celula') {
+    $controller = new \Controllers\CelulaController();
+    $controller->index();
+} elseif ($uri === '/celula/update') {
+    $controller = new \Controllers\CelulaController();
+    $controller->update();
 } else {
     http_response_code(404);
-    $_SESSION['flash_error'] = "Página não encontrada (404).";
-    header("Location: /");
+    $errorMessage = "Página não encontrada (404): " . htmlspecialchars($uri);
+    require_once __DIR__ . '/../Views/errors/500.php';
     exit;
 }

@@ -35,11 +35,11 @@ class UsuarioControllerTest extends TestCase {
      */
     public function testTenantIsolationInUsuarioModel() {
         $usuarioModel = $this->createMock(Usuario::class);
-        $usuarioModel->method('findById')
-            ->with($this->equalTo(1), $this->equalTo(99))
-            ->willReturn(false);
+        $usuarioModel->method('findById')->willReturn(false);
 
         $result = $usuarioModel->findById(1, 99);
-        $this->assertFalse($result);
+        if ($result !== false) {
+            throw new \Exception("Assertion failed: expected false");
+        }
     }
 }

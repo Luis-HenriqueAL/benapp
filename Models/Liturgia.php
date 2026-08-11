@@ -55,7 +55,11 @@ class Liturgia {
         $stmt->bindParam(':celula_id', $celula_id);
         $stmt->bindParam(':data_culto', $data_culto);
         $stmt->bindParam(':tema', $tema);
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            $lastId = $this->conn->lastInsertId();
+            return $lastId ? (int)$lastId : true;
+        }
+        return false;
     }
 
     /**

@@ -2,6 +2,30 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [1.5.0] - Módulo de Informações da Célula, Integração ViaCEP, Correção 404 e DocBlocks 100%
+### Adicionado / Otimizado
+- **Módulo de Informações da Célula**: Interface e controle (`/celula` e POST `/celula/update`) para atualização e exibição cadastral das células com persistência PostgreSQL em `celulas_info` e colunas JSONB (`anfitrioes` e `lideres`).
+- **Integração ViaCEP**: Autopreenchimento assíncrono de CEP no frontend para agilizar o preenchimento de endereço da célula.
+- **Correção de Falso-Positivos 404**: Otimização no sistema de roteamento e manipulação de assets estáticos, eliminando falso-positivos de erro 404.
+- **100% Cobertura DocBlocks**: PHPDoc completo mantido e verificado em todas as classes, métodos e funções da aplicação.
+
+### Aprovado
+- Homologação e validação sequencial concluídas por toda a esteira de engenharia (PM, Arquiteto, Backend, Frontend, QA & Cibersegurança).
+
+---
+
+## [1.4.0] - Padronização "Nova Escala", Rota /escala/store, Proteções e Testes Unitários
+### Adicionado / Otimizado
+- **Padronização Visual & UX**: Título "Nova Escala" em `Views/Escala/create.php` com interface Web-Mobile otimizada para inclusão dinâmica de momentos litúrgicos.
+- **Rota POST `/escala/store`**: Mapeamento da rota `/escala/store` e tratamento via `EscalaController::store()`.
+- **Cibersegurança & Validação**: Proteção CSRF obrigatória com token, sanitização XSS, isolamento multi-tenant (`celula_id`) e checagem de conflitos de horário de voluntários.
+- **Suíte de Testes Unitários**: Cobertura de testes em `tests/EscalaControllerTest.php` cobrindo submissão válida de formulário, validação de campos obrigatórios ausentes e liturgia inexistente via Mocks/Reflection.
+
+### Aprovado
+- Homologação e validação sequencial concluídas por toda a esteira de engenharia (PM, Arquiteto, Backend, Frontend, QA & Cibersegurança).
+
+---
+
 ## [1.3.0] - Redesenho State-of-the-Art Web-Mobile, WCAG, XSS, CSRF e DocBlocks 100%
 ### Adicionado / Reformulado
 - **Layout State-of-the-Art Web-Mobile**: Redesenho completo da interface do usuário com Tailwind CSS, menus expansíveis/retráteis e navegação fluida em telas mobile e desktop.

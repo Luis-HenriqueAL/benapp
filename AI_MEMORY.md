@@ -19,7 +19,10 @@ Sistema de Gestão de Células (benApp).
 - Tailwind CSS (Interface Web-Mobile State-of-the-Art)
 
 ## Decisões de Arquitetura
-- **MVC & Clean Architecture**: Separação rigorosa entre Models (`Usuario`, `Escala`, `Liturgia`), Controllers (`AuthController`, `EscalaController`, `UsuarioController`, etc.) e Views.
+- **MVC & Clean Architecture**: Separação rigorosa entre Models (`Usuario`, `Escala`, `Liturgia`, `CelulaInfo`), Controllers (`AuthController`, `EscalaController`, `UsuarioController`, `CelulaController`, etc.) e Views.
+- **Módulo de Informações da Célula**: Interface e rotas (`/celula` e `/celula/update`) para gestão cadastral da célula com persistência PostgreSQL em `celulas_info` (suporte a `anfitrioes` e `lideres` via JSONB).
+- **Integração ViaCEP**: Autopreenchimento assíncrono de endereço via API ViaCEP no frontend ao digitar o CEP.
+- **Tratamento de Rotas & Asset Handling**: Resolução e eliminação de falso-positivos de erro 404 em roteamento e requisições de assets estáticos.
 - **Módulo de Usuários**: CRUD completo e gestão de usuários com controle de permissões por papel/perfil e isolamento multi-tenant por `celula_id`.
 - **Interface Web-Mobile State-of-the-Art**: Redesenho responsivo de alta precisão UX/UI com Menu Lateral Retrátil (Sidebar), adaptável a dispositivos móveis e desktop.
 - **Acessibilidade WCAG**: Conformidade com padrões WCAG (contraste visual, atributos ARIA, suporte a leitores de tela e navegação por teclado).
@@ -33,14 +36,19 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Módulo de Informações da Célula (`CelulaController`, `Views/Celula/index.php`, `Models/CelulaInfo.php`) com rotas GET `/celula` e POST `/celula/update`.
+  - Integração frontend com a API ViaCEP para consulta e preenchimento dinâmico de endereços.
+  - Correção de falso-positivos de erro 404 em assets e roteamento da aplicação.
+  - 100% de cobertura de DocBlocks (PHPDoc) mantida em todas as classes, métodos e funções.
+  - Validação unânime e sequencial concluída por toda a esteira de engenharia (PM, Arquiteto, Backend, Frontend, QA & Cibersegurança).
+  - Padronização do título "Nova Escala" em `Views/Escala/create.php` e layout de montagem dinâmica de cultos/liturgias.
+  - Rota POST `/escala/store` configurada e integrada no controller (`EscalaController::store()`).
+  - Proteções ativas: CSRF (`SecurityHelper`), sanitização contra XSS, validação de multi-tenancy (`celula_id`) e prevenção contra conflitos de horários.
+  - Suíte de testes unitários (`tests/EscalaControllerTest.php` e `tests/UsuarioControllerTest.php`) implementada.
   - Redesenho do Layout State-of-the-Art Web-Mobile finalizado e otimizado.
   - Ajustes e validações de Acessibilidade WCAG implementados.
-  - Proteção contra vulnerabilidades XSS (sanitização universal) e CSRF (validação de tokens) ativas.
-  - Cobertura de 100% de DocBlocks mantida e atualizada em todo o projeto.
   - Módulo de Usuários completo com CRUD, controle de acesso e isolamento por `celula_id`.
   - Sistema de Autenticação (Login, Logout e Controle de Sessão) validado.
   - Composer integrado com autoload PSR-4.
-  - Banco de Dados PostgreSQL multi-tenant e containerização Docker operacionais.
-  - Validação sequencial e unânime concluída por toda a esteira de engenharia (PM, Arquiteto, Backend, Frontend, QA & Cibersegurança).
 - **Falta Fazer (Backlog)**:
-  - Relatórios avançados pós-MVP e integrações externas.
+  - Relatórios avançados pós-MVP e integrações externas adicionais.

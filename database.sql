@@ -1,6 +1,24 @@
 -- Script SQL de inicializacao do PostgreSQL (Multi-tenant)
 -- Garantia da chave celula_id em todas as tabelas
 
+CREATE TABLE IF NOT EXISTS celulas_info (
+    id SERIAL PRIMARY KEY,
+    celula_id INT NOT NULL UNIQUE,
+    nome VARCHAR(255) NOT NULL,
+    dia_semana VARCHAR(50),
+    horario TIME,
+    cep VARCHAR(10),
+    logradouro VARCHAR(255),
+    numero VARCHAR(20),
+    complemento VARCHAR(100),
+    bairro VARCHAR(100),
+    cidade VARCHAR(100),
+    estado VARCHAR(2),
+    anfitrioes JSONB DEFAULT '[]'::jsonb,
+    lideres JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     celula_id INT NOT NULL DEFAULT 1,
@@ -54,3 +72,15 @@ DROP TRIGGER IF EXISTS t_liturgia_estudo ON liturgias;
 CREATE TRIGGER t_liturgia_estudo
 AFTER INSERT ON liturgias
 FOR EACH ROW EXECUTE FUNCTION trg_liturgia_estudo();
+
+-- Tabela de Parametrizacao de Liturgia (Momentos Predefinidos por Célula)
+CREATE TABLE IF NOT EXISTS momentos_predefinidos (
+    id SERIAL PRIMARY KEY,
+    celula_id INT NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    ordem INT NOT NULL DEFAULT 0,
+    duracao_minutos INT DEFAULT 15,
+    obrigatorio BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
