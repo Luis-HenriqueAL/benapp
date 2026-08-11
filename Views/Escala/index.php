@@ -21,10 +21,12 @@ ob_start();
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Escalas da Célula</h2>
             <p class="text-xs text-slate-500 font-medium mt-0.5">Encontros e voluntários alocados</p>
         </div>
+        <?php if (SecurityHelper::hasPermissao('escala.create')): ?>
         <a href="/escala/create" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-extrabold px-4 py-2.5 rounded-2xl shadow-md shadow-blue-500/20 text-xs transition-all flex items-center gap-1.5 tracking-wide">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
             Nova
         </a>
+        <?php endif; ?>
     </div>
 
     <!-- Lista de Escalas em Cards (100% Reais do Banco) -->
@@ -35,16 +37,18 @@ ob_start();
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <h3 class="text-sm font-extrabold text-slate-800">Nenhuma escala cadastrada</h3>
-                <p class="text-xs text-slate-400 font-medium">Clique no botão "Nova" acima para cadastrar a primeira escala da sua célula.</p>
+                <p class="text-xs text-slate-400 font-medium">Não há escalas cadastradas para a célula até o momento.</p>
+                <?php if (SecurityHelper::hasPermissao('escala.create')): ?>
                 <a href="/escala/create" class="inline-block bg-blue-600 text-white text-xs font-extrabold px-4 py-2.5 rounded-2xl shadow-md shadow-blue-500/20">
                     Cadastrar Primeira Escala
                 </a>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <?php foreach ($escalas as $e): ?>
                 <?php 
                 $dataFormatted = !empty($e['data_culto']) ? date('d/m/Y', strtotime($e['data_culto'])) : 'Data a definir';
-                $tema = !empty($e['tema']) ? $e['tema'] : 'Culto de Célula';
+                $tema = !empty($e['tema']) ? $e['tema'] : 'Encontro de Célula';
                 $totalVol = (int)($e['total_voluntarios'] ?? 0);
                 ?>
                 <a href="/escala/show?id=<?= $e['liturgia_id'] ?>" class="block bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 p-5 active:scale-[0.98] transition-all group">

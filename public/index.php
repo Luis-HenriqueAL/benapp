@@ -89,6 +89,27 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
     } else {
         $controller->create();
     }
+} elseif ($uri === '/escala/edit') {
+    $controller = new \Controllers\EscalaController();
+    $controller->edit();
+} elseif ($uri === '/escala/update') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $controller = new \Controllers\EscalaController();
+            $controller->updateStore($_SESSION['celula_id'], $_POST);
+            $_SESSION['flash_success'] = "Escala/Liturgia atualizada com sucesso!";
+            header("Location: /escala/show?id=" . (int)($_POST['liturgia_id'] ?? 0));
+            exit;
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala/edit?id=" . (int)($_POST['liturgia_id'] ?? 0));
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
 } elseif ($uri === '/escala/show' || preg_match('/^\/escala\/\d+$/', $uri)) {
     $controller = new \Controllers\EscalaController();
     $controller->show();

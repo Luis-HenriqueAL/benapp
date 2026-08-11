@@ -38,6 +38,12 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Adequação de Terminologia: Remoção completa do termo "culto" das telas, rótulos de menu (`Escalas`), formulários de permissões e fallbacks de tema (`Encontro de Célula`), adequando o sistema 100% à realidade de gestão de células.
+  - Refinamento do Layout de Usuários (`Views/usuarios/index.php`): Ampliação do padding dos cards (`p-5`), ampliação do avatar (`w-12 h-12`), melhoria do espaçamento vertical (`space-y-4`) e respiros internos entre nome, e-mail e badges para eliminar o visual comprimido.
+  - Padronização Visual de Cabeçalhos (State-of-the-Art Web-Mobile UI): Uniformização de todos os títulos e ações superiores dentro de cards flutuantes brancos arredondados (`.bg-white.rounded-3xl.p-5`) nas telas *Detalhes da Escala*, *Nova Escala*, *Editar Liturgia*, *Momentos da Liturgia*, *Informações da Célula*, *Novo/Editar Usuário* e *Formulário de Perfis*.
+  - Edição de Liturgia & Escala: Implementação de rotas (`/escala/edit` e `/escala/update`), suporte no `EscalaController` (`edit`/`updateStore`), métodos `update` no `Liturgia` model e `deleteByLiturgiaId` no `Escala` model, além de tela dedicada `Views/Escala/edit.php` com reordenação drag & drop e troca de voluntários.
+  - Auto-edição de Perfil: Qualquer usuário autenticado (independente de ter a permissão `usuarios.manage`) pode alterar seu próprio nome, e-mail e redefinir senha através do `UsuarioController` (`edit`/`update`), com trava que impede a alteração não autorizada de seu próprio perfil de acesso/status e atalho direto no cabeçalho do Sidebar (`Views/layout.php`).
+  - Correção e fortalecimento do Controle de Acesso (RBAC): Ocultação estrita de módulos sem permissão no Sidebar e na Dock flutuante (`Views/layout.php`), bloqueio de ações de criação/edição/exclusão em Views (`Escala`, `usuarios`, `liturgia`, `perfil`) e adição de middlewares/checagens `SecurityHelper::hasPermissao()` nos Controllers (`CelulaController`, `MomentoLiturgiaController`, `PerfilController`, `EscalaController`).
   - Resolução da chamada `findByCelula` no `UsuarioModel` (`Models/Usuario.php`) corrigindo e garantindo a busca de usuários com filtro multi-tenant.
   - Implementação da nova tela e rotas `/liturgia/momentos` (`MomentoLiturgiaController`) para cadastro e gestão de momentos da liturgia.
   - Atualização da barra de navegação/menu lateral (Sidebar) com inclusão de link para a nova tela `/liturgia/momentos`.

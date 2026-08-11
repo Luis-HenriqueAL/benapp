@@ -1,20 +1,23 @@
 <?php 
 /**
- * View: Criação / Montagem Dinâmica de Escala e Liturgia
+ * View: Edição de Escala e Liturgia
  * 
- * Interface moderna de alta fidelidade (State-of-the-Art Web-Mobile UI).
- * Permite cadastrar a data do evento e selecionar momentos litúrgicos com voluntários da célula.
+ * Interface moderna no estado da arte (Web-Mobile UI).
+ * Permite alterar a data do evento, tema, reordenar momentos litúrgicos e atualizar a atribuição de voluntários.
+ * 
+ * @var array $liturgia Dados do culto e atribuições atuais.
+ * @var array|null $celulaInfo Informações cadastrais da célula.
+ * @var array $momentosPredefinidos Templates de momentos da célula.
+ * @var array $voluntarios Lista de usuários membros da célula.
  */
 
 require_once __DIR__ . '/../../Helpers/SecurityHelper.php';
 use Helpers\SecurityHelper;
 
-// Extrai e sanitiza os dados da célula enviadas pelo controller
 $nomeCelula = !empty($celulaInfo['nome']) ? $celulaInfo['nome'] : (!empty($celulaInfo['nome_celula']) ? $celulaInfo['nome_celula'] : 'Célula Boas Novas');
 $horarioCelula = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'], 0, 5) : '19:30';
 $diaSemanaCelula = !empty($celulaInfo['dia_semana']) ? $celulaInfo['dia_semana'] : 'Quarta-feira';
 
-// Momentos predefinidos (templates parametrizados)
 $templates = !empty($momentosPredefinidos) ? $momentosPredefinidos : [
     ['id' => 1, 'titulo' => 'Quebra-Gelo / Recepção', 'ordem' => 1, 'obrigatorio' => false],
     ['id' => 2, 'titulo' => 'Louvor e Adoração', 'ordem' => 2, 'obrigatorio' => false],
@@ -22,17 +25,21 @@ $templates = !empty($momentosPredefinidos) ? $momentosPredefinidos : [
     ['id' => 4, 'titulo' => 'Oração e Avisos', 'ordem' => 4, 'obrigatorio' => false]
 ];
 
+$atribuicoesExistentes = $liturgia['atribuicoes'] ?? [];
+$dataCultoVal = !empty($liturgia['data_culto']) ? date('Y-m-d', strtotime($liturgia['data_culto'])) : date('Y-m-d');
+$temaVal = !empty($liturgia['tema']) ? $liturgia['tema'] : "Encontro de Célula - {$nomeCelula}";
+
 ob_start(); 
 ?>
 <div class="space-y-5 max-w-md mx-auto pb-6">
     <!-- Header da Seção -->
     <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center space-x-3.5">
-        <a href="/escala" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para escalas">
+        <a href="/escala/show?id=<?= (int)$liturgia['id'] ?>" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para detalhes">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </a>
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Nova Escala</h2>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Informe a data e atribua os voluntários</p>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Editar Liturgia</h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Altere a data, momentos e voluntários</p>
         </div>
     </div>
 
@@ -44,13 +51,14 @@ ob_start();
             <p class="text-xs text-blue-100 font-medium">Horário habitual: <?= SecurityHelper::e($diaSemanaCelula) ?> às <?= SecurityHelper::e($horarioCelula) ?>h</p>
         </div>
         <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white font-extrabold text-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
         </div>
     </div>
 
-    <form id="escalaForm" action="/escala/store" method="POST" class="space-y-5">
+    <form id="escalaForm" action="/escala/update" method="POST" class="space-y-5">
         <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-        <input type="hidden" name="evento" value="Encontro de Célula - <?= SecurityHelper::e($nomeCelula) ?>">
+        <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+        <input type="hidden" name="evento" value="<?= SecurityHelper::e($temaVal) ?>">
         <input type="hidden" name="hora" value="<?= SecurityHelper::e($horarioCelula) ?>">
         
         <!-- Data do Culto -->
@@ -64,11 +72,11 @@ ob_start();
             
             <div>
                 <label for="data" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Data do Encontro</label>
-                <input id="data" type="date" name="data" required class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all">
+                <input id="data" type="date" name="data" value="<?= SecurityHelper::e($dataCultoVal) ?>" required class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all">
             </div>
         </div>
 
-        <!-- Bloco de Liturgia e Momentos Dinâmicos sem horário de início/fim -->
+        <!-- Bloco de Liturgia e Momentos Dinâmicos -->
         <div class="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
                 <div class="flex items-center space-x-3">
@@ -87,7 +95,13 @@ ob_start();
             </div>
             
             <div id="momentosList" class="space-y-4">
-                <?php foreach ($templates as $idx => $momento): ?>
+                <?php 
+                $listParaExibir = !empty($atribuicoesExistentes) ? $atribuicoesExistentes : $templates;
+                foreach ($listParaExibir as $idx => $mom):
+                    $tituloMom = $mom['funcao_id'] ?? ($mom['titulo'] ?? '');
+                    $voluntarioIdSalvo = $mom['usuario_id'] ?? null;
+                    $isObrigatorio = (strtolower(trim($tituloMom)) === 'estudo / palavra' || strtolower(trim($tituloMom)) === 'estudo');
+                ?>
                     <div class="momento-item p-4 border border-slate-200/80 rounded-2xl bg-slate-50/70 relative cursor-grab transition-all duration-200 hover:border-blue-300" draggable="true">
                         <!-- Controls Header (Reordenação & Exclusão) -->
                         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200/50">
@@ -96,7 +110,7 @@ ob_start();
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                                 </span>
                                 <span class="momento-badge font-extrabold text-xs text-blue-600 bg-blue-100/70 px-2 py-0.5 rounded-lg">#<?= $idx + 1 ?></span>
-                                <?php if (!empty($momento['obrigatorio'])): ?>
+                                <?php if ($isObrigatorio): ?>
                                     <span class="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-md">Obrigatório</span>
                                 <?php endif; ?>
                             </div>
@@ -107,7 +121,7 @@ ob_start();
                                 <button type="button" class="btn-move-down p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Descer momento" aria-label="Descer momento">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <?php if (empty($momento['obrigatorio'])): ?>
+                                <?php if (!$isObrigatorio): ?>
                                     <button type="button" aria-label="Remover momento" class="remove-momento text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded-lg transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
@@ -120,10 +134,13 @@ ob_start();
                                 <label data-field-for="titulo" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Momento da Liturgia</label>
                                 <select data-field="titulo" name="momentos[<?= $idx ?>][titulo]" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none text-xs font-semibold text-slate-800">
                                     <?php foreach ($templates as $t): ?>
-                                        <option value="<?= SecurityHelper::e($t['titulo']) ?>" <?= ($t['titulo'] === $momento['titulo']) ? 'selected' : '' ?>>
+                                        <option value="<?= SecurityHelper::e($t['titulo']) ?>" <?= ($t['titulo'] === $tituloMom) ? 'selected' : '' ?>>
                                             <?= SecurityHelper::e($t['titulo']) ?>
                                         </option>
                                     <?php endforeach; ?>
+                                    <?php if (!in_array($tituloMom, array_column($templates, 'titulo'))): ?>
+                                        <option value="<?= SecurityHelper::e($tituloMom) ?>" selected><?= SecurityHelper::e($tituloMom) ?></option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div>
@@ -132,7 +149,7 @@ ob_start();
                                     <option value="">Selecione o responsável...</option>
                                     <?php if (!empty($voluntarios) && is_array($voluntarios)): ?>
                                         <?php foreach ($voluntarios as $vol): ?>
-                                            <option value="<?= (int)$vol['id'] ?>">
+                                            <option value="<?= (int)$vol['id'] ?>" <?= ((int)$vol['id'] === (int)$voluntarioIdSalvo) ? 'selected' : '' ?>>
                                                 <?= SecurityHelper::e($vol['nome']) ?> (<?= SecurityHelper::e($vol['perfil'] ?? 'Membro') ?>)
                                             </option>
                                         <?php endforeach; ?>
@@ -146,7 +163,7 @@ ob_start();
         </div>
 
         <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all text-sm tracking-wide mt-2">
-            Salvar Escala Completa
+            Salvar Alterações da Liturgia
         </button>
     </form>
 </div>
@@ -157,14 +174,12 @@ ob_start();
         const btnAddMomento = document.getElementById('btnAddMomento');
         const momentosList = document.getElementById('momentosList');
 
-        // Template de opções de momentos
         const templateOptionsHtml = `
             <?php foreach ($templates as $t): ?>
                 <option value="<?= SecurityHelper::e($t['titulo']) ?>"><?= SecurityHelper::e($t['titulo']) ?></option>
             <?php endforeach; ?>
         `;
 
-        // Template de voluntários
         const voluntarioOptionsHtml = `
             <option value="">Selecione o responsável...</option>
             <?php if (!empty($voluntarios) && is_array($voluntarios)): ?>
@@ -198,7 +213,7 @@ ob_start();
         btnAddMomento.addEventListener('click', () => {
             const nextIndex = momentosList.children.length;
             const template = `
-                <div class="momento-item p-4 border border-slate-200/80 rounded-2xl bg-slate-50/70 relative cursor-grab transition-all duration-300 opacity-0 translate-y-4 hover:border-blue-300" draggable="true">
+                <div class="momento-item p-4 border border-slate-200/80 rounded-2xl bg-slate-50/70 relative cursor-grab transition-all duration-200 hover:border-blue-300" draggable="true">
                     <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200/50">
                         <div class="flex items-center space-x-2">
                             <span class="drag-handle text-slate-400 hover:text-slate-600 cursor-grab p-1" title="Arrastar para reordenar">
@@ -218,6 +233,7 @@ ob_start();
                             </button>
                         </div>
                     </div>
+
                     <div class="space-y-3">
                         <div>
                             <label data-field-for="titulo" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Momento da Liturgia</label>
@@ -234,57 +250,53 @@ ob_start();
                     </div>
                 </div>
             `;
-            
             momentosList.insertAdjacentHTML('beforeend', template);
-            const newItem = momentosList.lastElementChild;
-            requestAnimationFrame(() => {
-                newItem.classList.remove('opacity-0', 'translate-y-4');
-            });
             reindexMomentos();
         });
 
-        // Delegação de eventos para Subir, Descer e Remover
+        // Delegação de cliques para botões subir, descer e remover
         momentosList.addEventListener('click', (e) => {
-            const btnUp = e.target.closest('.btn-move-up');
-            const btnDown = e.target.closest('.btn-move-down');
+            const btnMoveUp = e.target.closest('.btn-move-up');
+            const btnMoveDown = e.target.closest('.btn-move-down');
             const btnRemove = e.target.closest('.remove-momento');
-            const item = e.target.closest('.momento-item');
 
-            if (btnUp && item) {
+            if (btnMoveUp) {
+                const item = btnMoveUp.closest('.momento-item');
                 const prev = item.previousElementSibling;
-                if (prev && prev.classList.contains('momento-item')) {
+                if (prev) {
                     momentosList.insertBefore(item, prev);
                     reindexMomentos();
                 }
-            } else if (btnDown && item) {
+            } else if (btnMoveDown) {
+                const item = btnMoveDown.closest('.momento-item');
                 const next = item.nextElementSibling;
-                if (next && next.classList.contains('momento-item')) {
+                if (next) {
                     momentosList.insertBefore(next, item);
                     reindexMomentos();
                 }
-            } else if (btnRemove && item) {
-                item.style.transform = 'scale(0.95)';
-                item.style.opacity = '0';
-                setTimeout(() => {
+            } else if (btnRemove) {
+                const item = btnRemove.closest('.momento-item');
+                if (item) {
                     item.remove();
                     reindexMomentos();
-                }, 200);
+                }
             }
         });
 
-        // Drag & Drop Limpo HTML5
+        // Suporte Drag and Drop HTML5
         let draggedItem = null;
+
         momentosList.addEventListener('dragstart', (e) => {
-            const item = e.target.closest('.momento-item');
-            if (item) {
-                draggedItem = item;
-                setTimeout(() => item.classList.add('opacity-40', 'bg-blue-50/50'), 0);
+            draggedItem = e.target.closest('.momento-item');
+            if (draggedItem) {
+                e.dataTransfer.effectAllowed = 'move';
+                draggedItem.classList.add('opacity-50', 'bg-blue-50');
             }
         });
 
         momentosList.addEventListener('dragend', (e) => {
             if (draggedItem) {
-                draggedItem.classList.remove('opacity-40', 'bg-blue-50/50');
+                draggedItem.classList.remove('opacity-50', 'bg-blue-50');
                 draggedItem = null;
                 reindexMomentos();
             }
@@ -292,12 +304,12 @@ ob_start();
 
         momentosList.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (!draggedItem) return;
-            const target = e.target.closest('.momento-item');
-            if (target && target !== draggedItem) {
-                const rect = target.getBoundingClientRect();
+            e.dataTransfer.dropEffect = 'move';
+            const targetItem = e.target.closest('.momento-item');
+            if (targetItem && targetItem !== draggedItem) {
+                const rect = targetItem.getBoundingClientRect();
                 const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-                momentosList.insertBefore(draggedItem, next ? target.nextSibling : target);
+                momentosList.insertBefore(draggedItem, next ? targetItem.nextSibling : targetItem);
             }
         });
     });

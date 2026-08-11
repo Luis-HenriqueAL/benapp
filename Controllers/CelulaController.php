@@ -26,6 +26,11 @@ class CelulaController {
      * @return void
      */
     public function index() {
+        if (!SecurityHelper::hasPermissao('celula.edit')) {
+            $_SESSION['flash_error'] = "Sem permissão para acessar as informações da célula.";
+            header("Location: /");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $celula = $this->celulaModel->findByCelulaId($celula_id);
         require_once __DIR__ . '/../Views/celula/index.php';
@@ -37,6 +42,11 @@ class CelulaController {
      * @return void
      */
     public function update() {
+        if (!SecurityHelper::hasPermissao('celula.edit')) {
+            $_SESSION['flash_error'] = "Sem permissão para editar as informações da célula.";
+            header("Location: /");
+            exit;
+        }
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
 

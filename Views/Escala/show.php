@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../Helpers/SecurityHelper.php';
 use Helpers\SecurityHelper;
 
 $dataCultoFormatted = !empty($liturgia['data_culto']) ? date('d/m/Y', strtotime($liturgia['data_culto'])) : 'Data a definir';
-$tema = !empty($liturgia['tema']) ? $liturgia['tema'] : 'Culto de Célula';
+$tema = !empty($liturgia['tema']) ? $liturgia['tema'] : 'Encontro de Célula';
 $atribuicoes = $liturgia['atribuicoes'] ?? [];
 
 $nomeCelula = !empty($celulaInfo['nome']) ? $celulaInfo['nome'] : (!empty($celulaInfo['nome_celula']) ? $celulaInfo['nome_celula'] : 'Célula Boas Novas');
@@ -23,24 +23,33 @@ $horarioCelula = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'],
 ob_start(); 
 ?>
 <div class="space-y-5 max-w-md mx-auto pb-6">
-    <!-- Cabeçalho com Ação Voltar e Excluir (LIDER) -->
-    <div class="flex items-center space-x-3 mb-1">
-        <a href="/escala" class="p-2.5 rounded-2xl bg-white text-slate-600 shadow-md shadow-slate-200/50 border border-slate-100 hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center" aria-label="Voltar para escalas">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-        </a>
-        <div class="flex-1">
-            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Detalhes da Escala</h2>
-            <p class="text-xs text-slate-500 font-medium">Programação e voluntários escalados</p>
+    <!-- Header da Seção -->
+    <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex justify-between items-center">
+        <div class="flex items-center space-x-3.5 min-w-0">
+            <a href="/escala" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para escalas">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+            </a>
+            <div class="min-w-0">
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight truncate">Detalhes da Escala</h2>
+                <p class="text-xs text-slate-500 font-medium mt-0.5 truncate">Programação e voluntários escalados</p>
+            </div>
         </div>
-        <?php if (($_SESSION['user']['perfil'] ?? '') === 'LIDER'): ?>
-            <form action="/escala/delete" method="POST" data-confirm="Tem certeza que deseja excluir este evento? Esta ação é irreversível.">
-                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                <button type="submit" class="p-2.5 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 active:scale-90 transition-all shadow-md shadow-rose-100/50 flex items-center justify-center" aria-label="Excluir evento">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </button>
-            </form>
-        <?php endif; ?> 
+        <div class="flex items-center gap-1.5 shrink-0">
+            <?php if (SecurityHelper::hasPermissao('escala.create')): ?>
+                <a href="/escala/edit?id=<?= (int)$liturgia['id'] ?>" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-blue-600 border border-slate-100 active:scale-90 transition-all shadow-xs flex items-center justify-center" aria-label="Editar evento" title="Editar Liturgia/Escala">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </a>
+            <?php endif; ?> 
+            <?php if (SecurityHelper::hasPermissao('escala.delete')): ?>
+                <form action="/escala/delete" method="POST" data-confirm="Tem certeza que deseja excluir este evento? Esta ação é irreversível.">
+                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                    <button type="submit" class="p-2.5 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 active:scale-90 transition-all shadow-xs flex items-center justify-center" aria-label="Excluir evento" title="Excluir evento">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </form>
+            <?php endif; ?> 
+        </div> 
     </div>
 
     <!-- Header do Evento -->

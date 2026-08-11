@@ -228,4 +228,19 @@ class Escala {
             ['id' => 4, 'titulo' => 'Oração e Avisos', 'ordem' => 4, 'duracao_minutos' => 15, 'obrigatorio' => false]
         ];
     }
+
+    /**
+     * Remove todas as atribuições de voluntários de uma liturgia específica da célula.
+     *
+     * @param int $celula_id Identificador da célula (tenant).
+     * @param int $liturgia_id Identificador do culto/liturgia.
+     * @return bool Retorna verdadeiro se os registros forem excluídos.
+     */
+    public function deleteByLiturgiaId($celula_id, $liturgia_id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE liturgia_id = :liturgia_id AND celula_id = :celula_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':liturgia_id', $liturgia_id, PDO::PARAM_INT);
+        $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
 }

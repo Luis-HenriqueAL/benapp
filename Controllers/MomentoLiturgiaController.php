@@ -64,6 +64,11 @@ class MomentoLiturgiaController {
      * @return void
      */
     public function index() {
+        if (!SecurityHelper::hasPermissao('liturgia.momentos')) {
+            $_SESSION['flash_error'] = "Sem permissão para gerenciar os momentos da liturgia.";
+            header("Location: /");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $stmt = $this->conn->prepare("SELECT * FROM momentos_predefinidos WHERE celula_id = :celula_id ORDER BY ordem ASC, id ASC");
         $stmt->execute([':celula_id' => $celula_id]);
@@ -78,6 +83,11 @@ class MomentoLiturgiaController {
      * @return void
      */
     public function store() {
+        if (!SecurityHelper::hasPermissao('liturgia.momentos')) {
+            $_SESSION['flash_error'] = "Sem permissão para gerenciar os momentos da liturgia.";
+            header("Location: /");
+            exit;
+        }
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $titulo = trim($_POST['titulo'] ?? '');
@@ -114,6 +124,11 @@ class MomentoLiturgiaController {
      * @return void
      */
     public function delete() {
+        if (!SecurityHelper::hasPermissao('liturgia.momentos')) {
+            $_SESSION['flash_error'] = "Sem permissão para gerenciar os momentos da liturgia.";
+            header("Location: /");
+            exit;
+        }
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = (int)($_POST['id'] ?? 0);

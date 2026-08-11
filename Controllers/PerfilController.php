@@ -22,15 +22,14 @@ class PerfilController {
     }
 
     /**
-     * Verifica se o usuário autenticado possui perfil LIDER.
+     * Verifica se o usuário autenticado possui permissão para gerenciar perfis (perfil.manage ou LIDER).
      * Redireciona para a home com mensagem de erro em caso de acesso não autorizado.
      *
      * @return void
      */
     private function requireLider() {
-        $perfil = $_SESSION['user']['perfil'] ?? '';
-        if ($perfil !== 'LIDER') {
-            $_SESSION['flash_error'] = "Acesso restrito: apenas líderes podem gerenciar perfis.";
+        if (!SecurityHelper::hasPermissao('perfil.manage')) {
+            $_SESSION['flash_error'] = "Acesso restrito: você não possui permissão para gerenciar perfis.";
             header("Location: /");
             exit;
         }

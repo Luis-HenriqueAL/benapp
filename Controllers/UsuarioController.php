@@ -104,15 +104,23 @@ class UsuarioController {
     }
 
     /**
-     * Exibe o formulário de edição de um usuário existente.
+     * Exibe o formulário de edição de um usuário existente (ou do próprio perfil logado).
      *
      * @return void
      */
     public function edit() {
-        $this->requirePermissao('usuarios.manage');
         $celula_id = $_SESSION['celula_id'] ?? 1;
+        $current_user_id = $_SESSION['user']['id'] ?? null;
         $id = $_GET['id'] ?? null;
+
         if (!$id) {
+            header("Location: /usuarios");
+            exit;
+        }
+
+        $isSelf = ($current_user_id && (int)$id === (int)$current_user_id);
+        if (!SecurityHelper::hasPermissao('usuarios.manage') && !$isSelf) {
+            $_SESSION['flash_error'] = "Sem permissão para editar este usuário.";
             header("Location: /usuarios");
             exit;
         }
@@ -130,14 +138,14 @@ class UsuarioController {
     }
 
     /**
-     * Processa a atualização cadastral de um usuário.
+     * Processa a atualização cadastral de um usuário (ou do próprio perfil logado).
      *
      * @return void
      */
     public function update() {
-        $this->requirePermissao('usuarios.manage');
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
+        $current_user_id = $_SESSION['user']['id'] ?? null;
         $id = $_POST['id'] ?? null;
 
         if (!$id) {
@@ -145,14 +153,40 @@ class UsuarioController {
             exit;
         }
 
-        $current_user_id = $_SESSION['user']['id'] ?? null;
+        $isSelf = ($current_user_id && (int)$id === (int)$current_user_id);
+        if (!SecurityHelper::hasPermissao('usuarios.manage') && !$isSelf) {
+            $_SESSION['flash_error'] = "Sem permissão para atualizar este usuário.";
+            header("Location: /usuarios");
+            exit;
+        }
+
+        $existing = $this->usuarioModel->findById($celula_id, $id);
+        if (!$existing) {
+            $_SESSION['flash_error'] = "Usuário não encontrado.";
+            header("Location: /usuarios");
+            exit;
+        }
+
         $nome = trim($_POST['nome'] ?? '');
         $email = trim($_POST['email'] ?? '');
-        $perfil = trim($_POST['perfil'] ?? 'MEMBRO');
-        $status = trim($_POST['status'] ?? 'ativo');
         $senha = trim($_POST['senha'] ?? '');
 
-        if ($current_user_id && $id == $current_user_id && $status === 'inativo') {
+        if (empty($nome) || empty($email)) {
+            $_SESSION['flash_error'] = "Nome e E-mail são obrigatórios.";
+            header("Location: /usuarios/edit?id=" . $id);
+            exit;
+        }
+
+        // Apenas admins com usuarios.manage podem alterar perfil e status de usuários
+        if (SecurityHelper::hasPermissao('usuarios.manage')) {
+            $perfil = trim($_POST['perfil'] ?? $existing['perfil']);
+            $status = trim($_POST['status'] ?? $existing['status']);
+        } else {
+            $perfil = $existing['perfil'];
+            $status = $existing['status'];
+        }
+
+        if ($current_user_id && (int)$id === (int)$current_user_id && $status === 'inativo') {
             $_SESSION['flash_error'] = "Você não pode desativar seu próprio usuário.";
             header("Location: /usuarios/edit?id=" . $id);
             exit;
@@ -166,6 +200,13 @@ class UsuarioController {
             'senha' => $senha
         ]);
 
+        // Atualiza a sessão caso tenha editado o próprio perfil
+        if ($isSelf) {
+            $_SESSION['user']['nome'] = $nome;
+            $_SESSION['user']['email'] = $email;
+        }
+
+        $_SESSION['flash_success'] = "Dados atualizados com sucesso!";
         header("Location: /usuarios");
         exit;
     }

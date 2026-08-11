@@ -25,10 +25,12 @@ ob_start();
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Perfis & Permissões</h2>
             <p class="text-xs text-slate-500 font-medium mt-0.5">Controle de acesso por módulo</p>
         </div>
+        <?php if (SecurityHelper::hasPermissao('perfil.manage')): ?>
         <a href="/perfil/create" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-extrabold px-4 py-2.5 rounded-2xl shadow-md shadow-blue-500/20 text-xs transition-all flex items-center gap-1.5 tracking-wide">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
             Novo Perfil
         </a>
+        <?php endif; ?>
     </div>
 
     <?php if ($flashSuccess): ?>
@@ -72,7 +74,7 @@ ob_start();
             </div>
         </div>
         <div class="flex flex-wrap gap-1.5">
-            <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-xl border border-slate-200">Ver Escalas e Cultos</span>
+            <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-xl border border-slate-200">Ver Escalas</span>
         </div>
     </div>
 
@@ -104,6 +106,7 @@ ob_start();
                             <p class="text-xs text-slate-400 font-medium mt-0.5"><?= SecurityHelper::e($p['descricao']) ?></p>
                         <?php endif; ?>
                     </div>
+                    <?php if (SecurityHelper::hasPermissao('perfil.manage')): ?>
                     <div class="flex items-center gap-2 shrink-0">
                         <a href="/perfil/edit?id=<?= (int)$p['id'] ?>" class="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition active:scale-90" aria-label="Editar perfil">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -116,6 +119,7 @@ ob_start();
                             </button>
                         </form>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Permissões atribuídas -->

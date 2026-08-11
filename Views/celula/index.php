@@ -16,14 +16,14 @@ $flashSuccess = $_SESSION['flash_success'] ?? null;
 unset($_SESSION['flash_success']);
 ?>
 <div class="space-y-5 max-w-md mx-auto pb-6">
-    <!-- Cabeçalho com Ação Voltar -->
-    <div class="flex items-center space-x-3 mb-1">
-        <a href="/" class="p-2.5 rounded-2xl bg-white text-slate-600 shadow-md shadow-slate-200/50 border border-slate-100 hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center" aria-label="Voltar para início">
+    <!-- Header da Seção -->
+    <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center space-x-3.5">
+        <a href="/" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para início">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </a>
         <div>
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Informações da Célula</h2>
-            <p class="text-xs text-slate-500 font-medium">Configure os dados de endereço e liderança</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Configure os dados de endereço e liderança</p>
         </div>
     </div>
 

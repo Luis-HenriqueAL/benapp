@@ -19,7 +19,7 @@ $permissoesAtivas = $isEdit ? ($perfilEdicao['permissoes'] ?? []) : [];
 
 // Agrupamento visual das permissões por módulo
 $grupos = [
-    'Escalas & Cultos' => ['escala.view', 'escala.create', 'escala.delete'],
+    'Escalas'          => ['escala.view', 'escala.create', 'escala.delete'],
     'Membros & Equipe'  => ['usuarios.view', 'usuarios.manage'],
     'Célula & Config.'  => ['celula.edit', 'liturgia.momentos', 'perfil.manage'],
 ];
@@ -28,14 +28,14 @@ ob_start();
 ?>
 <div class="space-y-5 max-w-md mx-auto pb-6">
 
-    <!-- Cabeçalho -->
-    <div class="flex items-center space-x-3 mb-1">
-        <a href="/perfil" class="p-2.5 rounded-2xl bg-white text-slate-600 shadow-md shadow-slate-200/50 border border-slate-100 hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center" aria-label="Voltar">
+    <!-- Header da Seção -->
+    <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center space-x-3.5">
+        <a href="/perfil" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para perfis">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         </a>
         <div>
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight"><?= $titulo ?></h2>
-            <p class="text-xs text-slate-500 font-medium">Defina o nome e as permissões do perfil</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Defina o nome e as permissões do perfil</p>
         </div>
     </div>
 

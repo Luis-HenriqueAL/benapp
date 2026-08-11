@@ -132,4 +132,23 @@ class Liturgia {
         $stmt->execute();
         return $stmt->fetch();
     }
+
+    /**
+     * Atualiza a data e o tema de uma liturgia existente.
+     *
+     * @param int $celula_id Identificador do tenant.
+     * @param int $id Identificador único da liturgia.
+     * @param string $data_culto Data do culto (Y-m-d).
+     * @param string $tema Tema do culto.
+     * @return bool Retorna verdadeiro se for atualizado com sucesso.
+     */
+    public function update($celula_id, $id, $data_culto, $tema) {
+        $query = "UPDATE " . $this->table_name . " SET data_culto = :data_culto, data_liturgia = :data_culto, tema = :tema WHERE id = :id AND celula_id = :celula_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':data_culto', $data_culto);
+        $stmt->bindParam(':tema', $tema);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
 }

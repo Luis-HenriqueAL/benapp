@@ -45,6 +45,11 @@ class EscalaController {
      * @return void
      */
     public function index() {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.view')) {
+            $_SESSION['flash_error'] = "Sem permissão para visualizar escalas.";
+            header("Location: /login");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $escalas = $this->escalaModel->getEscalasComLiturgia($celula_id);
         $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
@@ -57,6 +62,11 @@ class EscalaController {
      * @return void
      */
     public function show() {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.view')) {
+            $_SESSION['flash_error'] = "Sem permissão para visualizar detalhes da escala.";
+            header("Location: /escala");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 
@@ -178,7 +188,7 @@ class EscalaController {
             throw new \Exception("A data do culto é obrigatória.");
         }
 
-        $evento = !empty($data['evento']) ? trim($data['evento']) : "Culto de Célula - {$nomeDefault}";
+        $evento = !empty($data['evento']) ? trim($data['evento']) : "Encontro de Célula - {$nomeDefault}";
 
         // 1. Cadastra a liturgia no banco
         $liturgiaId = $this->liturgiaModel->create($celula_id, $dataCulto, $evento);
@@ -238,5 +248,92 @@ class EscalaController {
         }
         
         return $escalados_com_sucesso;
+    }
+
+    /**
+     * Exibe a tela de edição de uma escala/liturgia existente.
+     *
+     * @return void
+     */
+    public function edit() {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
+            $_SESSION['flash_error'] = "Sem permissão para editar escalas.";
+            header("Location: /escala");
+            exit;
+        }
+        $celula_id = $_SESSION['celula_id'] ?? 1;
+        $id = (int)($_GET['id'] ?? 0);
+
+        $liturgia = $this->escalaModel->getLiturgiaDetails($celula_id, $id);
+        if (!$liturgia) {
+            $_SESSION['flash_error'] = "Escala não encontrada.";
+            header("Location: /escala");
+            exit;
+        }
+
+        $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
+        $momentosPredefinidos = $this->escalaModel->getMomentosPredefinidos($celula_id);
+        $voluntarios = $this->usuarioModel->findByCelula($celula_id);
+
+        require_once __DIR__ . '/../Views/Escala/edit.php';
+    }
+
+    /**
+     * Processa a atualização dos dados e momentos de uma liturgia/escala existente.
+     *
+     * @param int $celula_id Identificador da célula (tenant).
+     * @param array $data Dados POST do formulário.
+     * @throws \Exception Se a liturgia for inválida ou não pertencer à célula.
+     * @return bool Retorna verdadeiro em caso de sucesso.
+     */
+    public function updateStore($celula_id, $data) {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
+            throw new \Exception("Sem permissão para editar escalas.");
+        }
+
+        $liturgiaId = (int)($data['liturgia_id'] ?? 0);
+        if (!$liturgiaId) {
+            throw new \Exception("ID da liturgia/escala inválido.");
+        }
+
+        $liturgiaAtual = $this->liturgiaModel->findById($celula_id, $liturgiaId);
+        if (!$liturgiaAtual) {
+            throw new \Exception("Liturgia não encontrada ou não pertence a esta célula.");
+        }
+
+        $dataCulto = isset($data['data']) ? trim($data['data']) : '';
+        $horaCulto = !empty($data['hora']) ? trim($data['hora']) : '19:30';
+        $momentos = isset($data['momentos']) && is_array($data['momentos']) ? $data['momentos'] : [];
+
+        if (!isset($data['evento']) || trim($data['evento']) === '') {
+            throw new \Exception("O nome do evento/culto é obrigatório.");
+        }
+        if (empty($dataCulto)) {
+            throw new \Exception("A data do culto é obrigatória.");
+        }
+
+        $evento = trim($data['evento']);
+
+        // 1. Atualiza a liturgia no banco
+        $this->liturgiaModel->update($celula_id, $liturgiaId, $dataCulto, $evento);
+
+        // 2. Remove as atribuições anteriores para essa liturgia
+        $this->escalaModel->deleteByLiturgiaId($celula_id, $liturgiaId);
+
+        // 3. Processa e insere cada novo momento com os voluntários
+        foreach ($momentos as $index => $momento) {
+            $tituloMomento = isset($momento['titulo']) ? trim($momento['titulo']) : '';
+            $voluntarioId = !empty($momento['voluntario_id']) ? (int)$momento['voluntario_id'] : null;
+
+            if ($voluntarioId) {
+                $usuario = $this->usuarioModel->findById($celula_id, $voluntarioId);
+                if ($usuario) {
+                    $funcaoNome = !empty($tituloMomento) ? $tituloMomento : "Momento " . ($index + 1);
+                    $this->escalaModel->create($liturgiaId, $voluntarioId, $funcaoNome, $celula_id);
+                }
+            }
+        }
+
+        return true;
     }
 }

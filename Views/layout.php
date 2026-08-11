@@ -81,49 +81,62 @@ $currentUri = str_replace('/public', '', $currentUri);
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
 
-                <div class="flex items-center space-x-3.5 mt-2">
-                    <div class="w-13 h-13 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 text-white font-extrabold text-xl shadow-inner">
+                <a href="/usuarios/edit?id=<?= (int)($currentUser['id'] ?? 0) ?>" class="flex items-center space-x-3.5 mt-2 group cursor-pointer hover:opacity-90 transition-opacity" title="Editar Meu Perfil">
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 text-white font-extrabold text-xl shadow-inner group-hover:scale-105 transition-transform">
                         <?= htmlspecialchars(substr($currentUser['nome'] ?? 'U', 0, 1)) ?>
                     </div>
                     <div>
-                        <h2 class="font-extrabold text-base tracking-tight leading-snug"><?= htmlspecialchars($currentUser['nome'] ?? 'Usuário') ?></h2>
+                        <h2 class="font-extrabold text-base tracking-tight leading-snug flex items-center gap-1.5">
+                            <?= htmlspecialchars($currentUser['nome'] ?? 'Usuário') ?>
+                            <svg class="w-3.5 h-3.5 text-white/70 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </h2>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20 mt-1 uppercase tracking-wider">
                             <?= htmlspecialchars($currentUser['perfil'] ?? 'Membro') ?>
                         </span>
                     </div>
-                </div>
+                </a>
             </div>
 
             <!-- Navegação Principal no Sidebar -->
             <nav class="p-4 space-y-1.5">
                 <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Navegação Principal</div>
 
+                <?php if (SecurityHelper::hasPermissao('escala.view')): ?>
                 <a href="/" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= ($currentUri === '/' || $currentUri === '' || $currentUri === '/escala') ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
                     <svg class="w-5 h-5 <?= ($currentUri === '/' || $currentUri === '' || $currentUri === '/escala') ? 'text-brand-600' : 'text-slate-400' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Escalas & Cultos</span>
+                    <span>Escalas</span>
                 </a>
+                <?php endif; ?>
 
+                <?php if (SecurityHelper::hasPermissao('escala.create')): ?>
                 <a href="/escala/create" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= ($currentUri === '/escala/create') ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
                     <svg class="w-5 h-5 <?= ($currentUri === '/escala/create') ? 'text-brand-600' : 'text-slate-400' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span>Nova Escala</span>
                 </a>
+                <?php endif; ?>
 
+                <?php if (SecurityHelper::hasPermissao('usuarios.view')): ?>
                 <a href="/usuarios" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= (strpos($currentUri, '/usuarios') === 0) ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
                     <svg class="w-5 h-5 <?= (strpos($currentUri, '/usuarios') === 0) ? 'text-brand-600' : 'text-slate-400' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     <span>Equipe & Usuários</span>
                 </a>
+                <?php endif; ?>
 
+                <?php if (SecurityHelper::hasPermissao('celula.edit')): ?>
                 <a href="/celula" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= (strpos($currentUri, '/celula') === 0) ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
                     <svg class="w-5 h-5 <?= (strpos($currentUri, '/celula') === 0) ? 'text-brand-600' : 'text-slate-400' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"></path></svg>
                     <span>Informações da Célula</span>
                 </a>
+                <?php endif; ?>
 
+                <?php if (SecurityHelper::hasPermissao('liturgia.momentos')): ?>
                 <a href="/liturgia/momentos" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= (strpos($currentUri, '/liturgia/momentos') === 0) ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
                     <svg class="w-5 h-5 <?= (strpos($currentUri, '/liturgia/momentos') === 0) ? 'text-brand-600' : 'text-slate-400' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                     <span>Momentos da Liturgia</span>
                 </a>
+                <?php endif; ?>
 
-                <?php if (($currentUser['perfil'] ?? '') === 'LIDER'): ?>
+                <?php if (SecurityHelper::hasPermissao('perfil.manage')): ?>
                     <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Administração</div>
 
                     <a href="/perfil" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 <?= (strpos($currentUri, '/perfil') === 0) ? 'bg-brand-50 text-brand-600 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">
@@ -208,10 +221,12 @@ $currentUri = str_replace('/public', '', $currentUri);
 
     <!-- Navegação Inferior Dock Flutuante -->
     <nav class="glass-panel border-t border-slate-200/80 fixed bottom-0 left-0 w-full flex justify-around items-center py-2 px-6 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+        <?php if (SecurityHelper::hasPermissao('escala.view')): ?>
         <a href="/" class="flex flex-col items-center py-1 <?= ($currentUri === '/' || $currentUri === '' || $currentUri === '/escala') ? 'text-brand-600 font-bold' : 'text-slate-400 hover:text-brand-600' ?> transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span class="text-[10px] font-bold uppercase tracking-wider mt-1">Escalas</span>
         </a>
+        <?php endif; ?>
 
         <?php if (SecurityHelper::hasPermissao('escala.create')): ?>
         <a href="/escala/create" class="flex flex-col items-center py-1 group">
@@ -220,19 +235,14 @@ $currentUri = str_replace('/public', '', $currentUri);
             </div>
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 mt-0.5">Nova</span>
         </a>
-        <?php else: ?>
-        <div class="flex flex-col items-center py-1 opacity-30 cursor-not-allowed" title="Sem permissão">
-            <div class="bg-slate-300 text-white rounded-2xl p-3.5 -mt-8 border-4 border-slate-50 flex items-center justify-center">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-            </div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Nova</span>
-        </div>
         <?php endif; ?>
 
+        <?php if (SecurityHelper::hasPermissao('usuarios.view')): ?>
         <a href="/usuarios" class="flex flex-col items-center py-1 <?= (strpos($currentUri, '/usuarios') === 0) ? 'text-brand-600 font-bold' : 'text-slate-400 hover:text-brand-600' ?> transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             <span class="text-[10px] font-bold uppercase tracking-wider mt-1">Equipe</span>
         </a>
+        <?php endif; ?>
     </nav>
 
     <!-- Scripts Globais -->
