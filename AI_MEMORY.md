@@ -38,7 +38,7 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
-  - Visualizador de Cifras Aprimorado: Paleta clara (bg-slate-50/text-slate-800), autorolagem acelerada e ajustável por slider (1x–10x), botão **"Próxima Música"**, modo **"Apenas Letra"** com filtro correto de linhas de acordes e header fixo com backdrop-blur.
+  - Visualizador de Cifras Aprimorado: Paleta clara (bg-slate-50/text-slate-800), autorolagem acelerada com seletor de velocidade em linha dedicada abaixo dos botões, botão **"Próxima Música"**, modo **"Apenas Letra"** com filtro correto de linhas de acordes/tabs e header fixo com backdrop-blur.
   - Modo de Visualização "Apenas Letra" & Cifra Completa: Adicionados botões no topo de `Views/Escala/cifra.php` (**`🎼 Cifra`** VS **`📝 Apenas Letra`**) que filtram dinamicamente as linhas de acordes no navegador para vocalistas e membros.
   - Transposição Cromática de Tom em Tempo Real: Adicionado painel interativo em `Views/Escala/cifra.php` com botões **`-1 Semi`**, **`+1 Semi`** e **`Resetar`**, suporte a acordes maiores simples (`C`, `D`, `E`, `F`, `G`, `A`, `B`), inversões (`G/B`), sufixos complexos e algoritmo inteligente de identificação de linhas de cifragem (`isChordLine`) preservando a letra da música intacta.
   - Microserviço Docker `cifraclub-api` & Módulo de Cifras: Criação do container Python em `services/cifraclub-api` (`app.py`, `Dockerfile`, `requirements.txt`), registro no `docker-compose.yml` (porta 3000), extração resiliente com múltiplos seletores de container HTML (`find_all('pre')`, `#cifra_cnt`, `.cifra`), botão **"Buscar / Atualizar Cifra no Cifra Club"** (`force_refresh=1`) e auto-healing cache no banco de dados.
