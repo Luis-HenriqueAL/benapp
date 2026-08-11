@@ -27,7 +27,7 @@ class AuthController {
      */
     public function loginView() {
         if (isset($_SESSION['user'])) {
-            header("Location: /");
+            header("Location: " . SecurityHelper::getDefaultRoute());
             exit;
         }
         require_once __DIR__ . '/../Views/auth/login.php';
@@ -66,6 +66,12 @@ class AuthController {
             exit;
         }
 
+        if (isset($user['status']) && $user['status'] === 'inativo') {
+            $_SESSION['flash_error'] = "Usuário inativo. Entre em contato com a liderança.";
+            header("Location: /login");
+            exit;
+        }
+
         $_SESSION['user'] = [
             'id'        => $user['id'],
             'nome'      => $user['nome'],
@@ -79,7 +85,7 @@ class AuthController {
         $perfilModel = new \Models\Perfil();
         $_SESSION['permissoes'] = $perfilModel->getPermissoesPorNome($user['celula_id'], $user['perfil']);
 
-        header("Location: /");
+        header("Location: " . SecurityHelper::getDefaultRoute());
         exit;
     }
 

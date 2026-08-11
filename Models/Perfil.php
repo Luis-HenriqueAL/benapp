@@ -93,12 +93,34 @@ class Perfil {
     }
 
     /**
+     * Garante que o perfil MEMBRO exista para a célula no banco de dados com permissão padrão escala.view.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @return int ID do perfil MEMBRO.
+     */
+    public function ensureMembroPerfil($celula_id) {
+        $stmt = $this->conn->prepare("SELECT id FROM {$this->table_name} WHERE celula_id = :celula_id AND UPPER(nome) = 'MEMBRO' LIMIT 1");
+        $stmt->execute([':celula_id' => $celula_id]);
+        $id = $stmt->fetchColumn();
+
+        if (!$id) {
+            $stmtInsert = $this->conn->prepare("INSERT INTO {$this->table_name} (celula_id, nome, descricao) VALUES (:celula_id, 'MEMBRO', 'Perfil nativo de membro da célula')");
+            $stmtInsert->execute([':celula_id' => $celula_id]);
+            $id = $this->conn->lastInsertId();
+            $this->syncPermissoes($id, ['escala.view']);
+        }
+        return $id;
+    }
+
+    /**
      * Lista todos os perfis customizados da célula, incluindo suas permissões.
      *
      * @param int $celula_id Identificador do tenant.
      * @return array Lista de perfis com a chave 'permissoes' como array.
      */
     public function findAll($celula_id) {
+        $this->ensureMembroPerfil($celula_id);
+
         $query = "SELECT * FROM {$this->table_name} WHERE celula_id = :celula_id ORDER BY nome ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
@@ -138,42 +160,46 @@ class Perfil {
      * @param int $celula_id Identificador do tenant.
      * @param string $nome Nome do perfil.
      * @param string $descricao Descrição do perfil.
-     * @param array $permissoes Lista de chaves de permissão a atribuir.
-     * @return int|false ID do perfil criado ou false em caso de falha.
+     * @param array $permissoes Lista de permissões ativas.
+     * @return int ID do perfil criado.
      */
-    public function create($celula_id, $nome, $descricao, array $permissoes) {
+    public function create($celula_id, $nome, $descricao, array $permissoes = []) {
         $query = "INSERT INTO {$this->table_name} (celula_id, nome, descricao) VALUES (:celula_id, :nome, :descricao)";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([':celula_id' => $celula_id, ':nome' => $nome, ':descricao' => $descricao]);
-        $perfilId = (int)$this->conn->lastInsertId();
+        $stmt->execute([
+            ':celula_id' => $celula_id,
+            ':nome'      => $nome,
+            ':descricao' => $descricao,
+        ]);
 
-        if ($perfilId) {
-            $this->syncPermissoes($perfilId, $permissoes);
-        }
+        $perfil_id = $this->conn->lastInsertId();
+        $this->syncPermissoes($perfil_id, $permissoes);
 
-        return $perfilId ?: false;
+        return $perfil_id;
     }
 
     /**
-     * Atualiza os dados e permissões de um perfil existente.
+     * Atualiza um perfil existente e suas permissões associadas.
      *
      * @param int $celula_id Identificador do tenant.
      * @param int $id Identificador do perfil.
-     * @param string $nome Novo nome.
-     * @param string $descricao Nova descrição.
-     * @param array $permissoes Lista de chaves de permissão.
-     * @return bool Retorna verdadeiro em caso de sucesso.
+     * @param string $nome Nome do perfil.
+     * @param string $descricao Descrição do perfil.
+     * @param array $permissoes Lista de permissões ativas.
+     * @return bool Retorna verdadeiro se atualizado.
      */
-    public function update($celula_id, $id, $nome, $descricao, array $permissoes) {
+    public function update($celula_id, $id, $nome, $descricao, array $permissoes = []) {
         $query = "UPDATE {$this->table_name} SET nome = :nome, descricao = :descricao WHERE id = :id AND celula_id = :celula_id";
         $stmt = $this->conn->prepare($query);
-        $ok = $stmt->execute([':nome' => $nome, ':descricao' => $descricao, ':id' => $id, ':celula_id' => $celula_id]);
+        $stmt->execute([
+            ':id'        => $id,
+            ':celula_id' => $celula_id,
+            ':nome'      => $nome,
+            ':descricao' => $descricao,
+        ]);
 
-        if ($ok) {
-            $this->syncPermissoes($id, $permissoes);
-        }
-
-        return $ok;
+        $this->syncPermissoes($id, $permissoes);
+        return true;
     }
 
     /**
@@ -181,9 +207,15 @@ class Perfil {
      *
      * @param int $celula_id Identificador do tenant.
      * @param int $id Identificador do perfil.
+     * @throws \Exception Se for uma tentativa de deletar o perfil MEMBRO nativo.
      * @return bool Retorna verdadeiro se deletado.
      */
     public function delete($celula_id, $id) {
+        $perfil = $this->findById($celula_id, $id);
+        if ($perfil && strtoupper($perfil['nome']) === 'MEMBRO') {
+            throw new \Exception("O perfil Membro é nativo do sistema e não pode ser excluído, apenas editado.");
+        }
+
         $query = "DELETE FROM {$this->table_name} WHERE id = :id AND celula_id = :celula_id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id' => $id, ':celula_id' => $celula_id]);
@@ -216,15 +248,23 @@ class Perfil {
             return array_keys(self::$permissoesDisponiveis);
         }
 
+        $this->ensureMembroPerfil($celula_id);
+
         $query = "
             SELECT pp.chave_permissao 
             FROM perfil_permissoes pp
             INNER JOIN {$this->table_name} p ON pp.perfil_id = p.id
-            WHERE p.celula_id = :celula_id AND p.nome = :nome
+            WHERE p.celula_id = :celula_id AND UPPER(p.nome) = UPPER(:nome)
         ";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':celula_id' => $celula_id, ':nome' => $nomePerfil]);
-        return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+        $perms = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+
+        if (empty($perms) && strtoupper($nomePerfil) === 'MEMBRO') {
+            return ['escala.view'];
+        }
+
+        return $perms;
     }
 
     /**

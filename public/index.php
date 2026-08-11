@@ -8,6 +8,9 @@ spl_autoload_register(function ($class) {
     }
 });
 
+// Carrega as variáveis de ambiente do arquivo .env
+\Helpers\EnvHelper::load(__DIR__ . '/../.env');
+
 // Capturador Global de Erros para nunca exibir tela branca com exceção pura
 set_exception_handler(function ($e) {
     $_SESSION['flash_error'] = $e->getMessage();
@@ -186,6 +189,20 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
         try {
             $controller = new \Controllers\PresencaController();
             $controller->confirmar();
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
+} elseif ($uri === '/presenca/visitante') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $controller = new \Controllers\PresencaController();
+            $controller->registrarVisitante();
         } catch (\Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();
             header("Location: /escala");

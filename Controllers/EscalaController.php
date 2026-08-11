@@ -46,8 +46,14 @@ class EscalaController {
      */
     public function index() {
         if (!\Helpers\SecurityHelper::hasPermissao('escala.view')) {
-            $_SESSION['flash_error'] = "Sem permissão para visualizar escalas.";
-            header("Location: /login");
+            $defaultRoute = \Helpers\SecurityHelper::getDefaultRoute();
+            if ($defaultRoute !== '/' && $defaultRoute !== '/escala') {
+                header("Location: " . $defaultRoute);
+                exit;
+            }
+            // Se o usuário não tiver permissão para escalas nem outros módulos, exibe a edição do seu próprio perfil
+            $userId = (int)($_SESSION['user']['id'] ?? 0);
+            header("Location: /usuarios/edit?id={$userId}");
             exit;
         }
         $celula_id = $_SESSION['celula_id'] ?? 1;
@@ -83,6 +89,9 @@ class EscalaController {
         $presencaModel = new \Models\Presenca();
         $presencas = $presencaModel->findByLiturgia($celula_id, $id);
         $usuarioLogadoConfirmado = $presencaModel->jaConfirmado($id, (int)($_SESSION['user']['id'] ?? 0));
+
+        $todosUsuarios = $this->usuarioModel->findByCelulaId($celula_id);
+        $visitantesHistorico = $presencaModel->findVisitantesByCelula($celula_id);
 
         require_once __DIR__ . '/../Views/Escala/show.php';
     }

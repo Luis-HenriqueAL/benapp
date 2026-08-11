@@ -79,12 +79,6 @@ VALUES
 (1, 'Voluntário João', 'joao@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'MEMBRO')
 ON CONFLICT (email) DO NOTHING;
 
--- Célula inicial de exemplo
-INSERT INTO celulas_info (celula_id, nome, dia_semana, horario, cep, logradouro, numero, complemento, bairro, cidade, estado, anfitrioes, lideres)
-VALUES
-(1, 'Célula Boas Novas', 'Quarta-feira', '19:30', '01001-000', 'Praça da Sé', '100', 'Apto 12', 'Sé', 'São Paulo', 'SP', '[{"nome": "Carlos Anfitrião", "telefone1": "(11) 98888-7777", "telefone2": ""}]'::jsonb, '[{"nome": "Líder Principal", "telefones": ["(11) 99999-8888"]}]'::jsonb)
-ON CONFLICT (celula_id) DO NOTHING;
-
 -- Tabela de Parametrizacao de Liturgia (Momentos Predefinidos por Célula)
 CREATE TABLE IF NOT EXISTS momentos_predefinidos (
     id SERIAL PRIMARY KEY,

@@ -28,7 +28,7 @@ class CelulaController {
     public function index() {
         if (!SecurityHelper::hasPermissao('celula.edit')) {
             $_SESSION['flash_error'] = "Sem permissão para acessar as informações da célula.";
-            header("Location: /");
+            header("Location: " . SecurityHelper::getDefaultRoute());
             exit;
         }
         $celula_id = $_SESSION['celula_id'] ?? 1;

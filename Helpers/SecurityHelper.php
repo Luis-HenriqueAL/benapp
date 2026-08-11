@@ -63,4 +63,32 @@ class SecurityHelper {
         $permissoes = $_SESSION['permissoes'] ?? [];
         return in_array($chave, $permissoes, true);
     }
+
+    /**
+     * Determina a rota inicial padrão apropriada para o usuário autenticado com base em suas permissões.
+     *
+     * @return string URL da rota destino autorizada.
+     */
+    public static function getDefaultRoute() {
+        if (!isset($_SESSION['user'])) {
+            return '/login';
+        }
+        if (self::hasPermissao('escala.view')) {
+            return '/';
+        }
+        if (self::hasPermissao('usuarios.view')) {
+            return '/usuarios';
+        }
+        if (self::hasPermissao('celula.edit')) {
+            return '/celula';
+        }
+        if (self::hasPermissao('liturgia.momentos')) {
+            return '/liturgia/momentos';
+        }
+        if (self::hasPermissao('perfil.manage')) {
+            return '/perfil';
+        }
+        $userId = (int)($_SESSION['user']['id'] ?? 0);
+        return "/usuarios/edit?id={$userId}";
+    }
 }

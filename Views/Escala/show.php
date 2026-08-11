@@ -115,7 +115,7 @@ ob_start();
         <?php endif; ?>
     </div>
 
-    <!-- Seção de Presenças -->
+    <!-- Seção de Presenças e Visitantes -->
     <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
         <div class="flex items-center justify-between">
             <div>
@@ -126,8 +126,8 @@ ob_start();
                 <form action="/presenca/cancelar" method="POST" data-confirm="Deseja cancelar sua confirmação de presença?">
                     <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
                     <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs transition-all hover:bg-emerald-100 active:scale-95">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs transition-all hover:bg-emerald-100 active:scale-95">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         Confirmado
                     </button>
                 </form>
@@ -135,26 +135,119 @@ ob_start();
                 <form action="/presenca/confirmar" method="POST">
                     <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
                     <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-blue-500/20">
+                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-blue-500/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                        Confirmar Presença
+                        Eu Vou
                     </button>
                 </form>
             <?php endif; ?>
         </div>
 
+        <!-- Botões de Ação Secundária (Outro Membro / Visitante) -->
+        <div class="flex gap-2 pt-1">
+            <button type="button" onclick="toggleForm('formOutroMembro')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                Confirmar Membro
+            </button>
+            <button type="button" onclick="toggleForm('formVisitante')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-purple-50 text-purple-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                Novo Visitante
+            </button>
+        </div>
+
+        <!-- Formulário para Confirmar Outro Membro -->
+        <div id="formOutroMembro" class="hidden bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+            <h4 class="text-xs font-extrabold text-slate-800">Confirmar Presença de Membro</h4>
+            <form action="/presenca/confirmar" method="POST" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                <div>
+                    <label for="usuario_id_select" class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Selecione o Membro</label>
+                    <select id="usuario_id_select" name="usuario_id" required class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <option value="">-- Escolha um membro da equipe --</option>
+                        <?php foreach ($todosUsuarios as $u): ?>
+                            <?php 
+                            $jaConf = array_filter($presencas ?? [], fn($p) => (($p['usuario_id'] ?? 0) == $u['id'])); 
+                            ?>
+                            <option value="<?= $u['id'] ?>" <?= !empty($jaConf) ? 'disabled' : '' ?>>
+                                <?= SecurityHelper::e($u['nome']) ?> (<?= SecurityHelper::e($u['perfil']) ?>) <?= !empty($jaConf) ? '- Já Confirmado' : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="toggleForm('formOutroMembro')" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Confirmar Membro</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário para Adicionar Visitante -->
+        <div id="formVisitante" class="hidden bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-3">
+            <h4 class="text-xs font-extrabold text-purple-900">Cadastrar Novo Visitante</h4>
+            <form action="/presenca/visitante" method="POST" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                <div>
+                    <label for="nome_visitante" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Nome do Visitante</label>
+                    <input id="nome_visitante" type="text" name="nome_visitante" list="visitantes_historico" required placeholder="Ex: João da Silva" oninput="atualizarQtdVisitaVisitante(this.value)" class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    <datalist id="visitantes_historico">
+                        <?php foreach ($visitantesHistorico ?? [] as $vh): ?>
+                            <option value="<?= SecurityHelper::e($vh['nome_visitante']) ?>" data-proxima-visita="<?= (int)($vh['max_visitas'] + 1) ?>">
+                                Visitante anterior (já foi <?= (int)$vh['max_visitas'] ?>x)
+                            </option>
+                        <?php endforeach; ?>
+                    </datalist>
+                </div>
+                <div>
+                    <label for="qtd_visitas" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Vezes que já foi à célula</label>
+                    <input id="qtd_visitas" type="number" name="qtd_visitas" value="1" min="1" required class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="toggleForm('formVisitante')" class="px-3 py-2 text-xs font-bold text-purple-600 hover:text-purple-800">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Cadastrar Visitante</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Confirmados (Membros + Visitantes) -->
         <?php if (!empty($presencas)): ?>
-            <div class="space-y-2">
+            <?php 
+            $loggedUserId = (int)($_SESSION['user']['id'] ?? 0);
+            $canDeleteAny = SecurityHelper::hasPermissao('escala.delete');
+            ?>
+            <div class="space-y-2 pt-1">
                 <?php foreach ($presencas as $p): ?>
-                    <div class="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-extrabold text-sm flex items-center justify-center shrink-0">
+                    <?php 
+                    $isVisitante = ($p['tipo'] ?? '') === 'visitante' || empty($p['usuario_id']); 
+                    $podeRemover = $canDeleteAny || 
+                                   (!empty($p['usuario_id']) && (int)$p['usuario_id'] === $loggedUserId) || 
+                                   (!empty($p['registrado_por_id']) && (int)$p['registrado_por_id'] === $loggedUserId);
+                    ?>
+                    <div class="flex items-center gap-3 p-3 rounded-2xl <?= $isVisitante ? 'bg-purple-50/60 border border-purple-100' : 'bg-emerald-50/60 border border-emerald-100' ?>">
+                        <div class="w-8 h-8 rounded-xl <?= $isVisitante ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700' ?> font-extrabold text-sm flex items-center justify-center shrink-0">
                             <?= strtoupper(substr($p['usuario_nome'] ?? '?', 0, 1)) ?>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-bold text-slate-800 truncate"><?= SecurityHelper::e($p['usuario_nome'] ?? '') ?></p>
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide"><?= SecurityHelper::e($p['usuario_perfil'] ?? '') ?></p>
+                            <?php if ($isVisitante): ?>
+                                <p class="text-[10px] text-purple-600 font-extrabold tracking-wide uppercase">
+                                    Visitante • <?= (int)($p['qtd_visitas'] ?? 1) ?>ª visita à célula
+                                </p>
+                            <?php else: ?>
+                                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide"><?= SecurityHelper::e($p['usuario_perfil'] ?? 'MEMBRO') ?></p>
+                            <?php endif; ?>
                         </div>
-                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <?php if ($podeRemover): ?>
+                            <form action="/presenca/cancelar" method="POST" data-confirm="Remover esta confirmação de presença?">
+                                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                                <input type="hidden" name="presenca_id" value="<?= (int)$p['id'] ?>">
+                                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Remover presença">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -163,6 +256,37 @@ ob_start();
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+function toggleForm(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        if (el.classList.contains('hidden')) {
+            document.getElementById('formOutroMembro')?.classList.add('hidden');
+            document.getElementById('formVisitante')?.classList.add('hidden');
+            el.classList.remove('hidden');
+        } else {
+            el.classList.add('hidden');
+        }
+    }
+}
+
+function atualizarQtdVisitaVisitante(val) {
+    const datalist = document.getElementById('visitantes_historico');
+    const inputQtd = document.getElementById('qtd_visitas');
+    if (!datalist || !inputQtd) return;
+
+    for (let opt of datalist.options) {
+        if (opt.value.trim().toLowerCase() === val.trim().toLowerCase()) {
+            const proxVisita = opt.getAttribute('data-proxima-visita');
+            if (proxVisita) {
+                inputQtd.value = proxVisita;
+            }
+            break;
+        }
+    }
+}
+</script>
 <?php 
 $content = ob_get_clean(); 
 require __DIR__ . '/../layout.php'; 

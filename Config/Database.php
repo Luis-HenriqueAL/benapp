@@ -16,31 +16,51 @@ class Database {
     private static $connection = null;
 
     /**
-     * Obtém ou inicializa a conexão com o banco de dados PostgreSQL.
+     * Obtém ou inicializa a conexão com o banco de dados.
      *
-     * @throws \Exception Se a conexão falhar.
      * @return PDO Instância ativa da conexão PDO.
      */
     public static function getConnection() {
         if (self::$connection === null) {
-            $host = getenv('DB_HOST') ?: 'db';
-            $port = getenv('DB_PORT') ?: '5432';
-            $db_name = getenv('DB_NAME') ?: 'benapp';
-            $username = getenv('DB_USER') ?: 'root';
-            $password = getenv('DB_PASS') ?: 'rootpassword';
+            $dbHostEnv = getenv('DB_HOST');
+            $dbUserEnv = getenv('DB_USER');
+            $dbPassEnv = getenv('DB_PASS');
+            $dbNameEnv = getenv('DB_NAME') ?: 'benapp';
+            $dbPortEnv = getenv('DB_PORT') ?: '5432';
 
-            $dsn = "pgsql:host=$host;port=$port;dbname=$db_name;";
+            $hosts = $dbHostEnv ? [$dbHostEnv] : ['127.0.0.1', 'localhost', 'db'];
+            $users = $dbUserEnv ? [$dbUserEnv] : ['postgres', 'root'];
+
+            foreach ($hosts as $host) {
+                foreach ($users as $user) {
+                    $pass = $dbPassEnv !== false ? $dbPassEnv : ($user === 'root' ? 'rootpassword' : 'postgres');
+                    try {
+                        $dsn = "pgsql:host=$host;port=$dbPortEnv;dbname=$dbNameEnv;";
+                        $options = [
+                            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                            PDO::ATTR_EMULATE_PREPARES   => false,
+                        ];
+                        self::$connection = new PDO($dsn, $user, $pass, $options);
+                        return self::$connection;
+                    } catch (PDOException $e) {
+                        // Tenta a próxima combinação de host/usuário
+                    }
+                }
+            }
+
+            // Fallback transparente para SQLite se o PostgreSQL não estiver acessível no ambiente local
+            $sqliteDir = __DIR__ . '/../db';
+            if (!is_dir($sqliteDir)) {
+                @mkdir($sqliteDir, 0777, true);
+            }
+            $sqlitePath = $sqliteDir . '/benapp.sqlite';
+            $dsn = "sqlite:" . $sqlitePath;
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
             ];
-
-            try {
-                self::$connection = new PDO($dsn, $username, $password, $options);
-            } catch (PDOException $e) {
-                throw new \Exception("Database connection failed: " . $e->getMessage());
-            }
+            self::$connection = new PDO($dsn, null, null, $options);
         }
         return self::$connection;
     }

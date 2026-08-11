@@ -42,7 +42,7 @@ class UsuarioController {
     public function index() {
         if (!SecurityHelper::hasPermissao('usuarios.view')) {
             $_SESSION['flash_error'] = "Sem permissão para visualizar membros.";
-            header("Location: /");
+            header("Location: " . SecurityHelper::getDefaultRoute());
             exit;
         }
         $celula_id = $_SESSION['celula_id'] ?? 1;

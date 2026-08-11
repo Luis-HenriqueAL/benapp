@@ -30,7 +30,7 @@ class PerfilController {
     private function requireLider() {
         if (!SecurityHelper::hasPermissao('perfil.manage')) {
             $_SESSION['flash_error'] = "Acesso restrito: você não possui permissão para gerenciar perfis.";
-            header("Location: /");
+            header("Location: " . SecurityHelper::getDefaultRoute());
             exit;
         }
     }
