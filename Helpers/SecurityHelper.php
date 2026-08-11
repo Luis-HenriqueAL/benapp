@@ -14,7 +14,7 @@ class SecurityHelper {
      * @return string Token CSRF hexadecimal único.
      */
     public static function generateCsrfToken() {
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             session_start();
         }
         if (empty($_SESSION['csrf_token'])) {
@@ -31,7 +31,7 @@ class SecurityHelper {
      * @return bool Retorna verdadeiro se for válido.
      */
     public static function verifyCsrfToken($token) {
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             session_start();
         }
         if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
@@ -48,5 +48,19 @@ class SecurityHelper {
      */
     public static function e($string) {
         return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Verifica se o usuário autenticado possui uma permissão específica.
+     * Líderes sempre retornam verdadeiro (acesso irrestrito).
+     *
+     * @param string $chave Chave da permissão (ex: 'escala.create', 'usuarios.manage').
+     * @return bool Verdadeiro se o usuário tiver a permissão.
+     */
+    public static function hasPermissao($chave) {
+        $perfil = $_SESSION['user']['perfil'] ?? '';
+        if ($perfil === 'LIDER') return true;
+        $permissoes = $_SESSION['permissoes'] ?? [];
+        return in_array($chave, $permissoes, true);
     }
 }

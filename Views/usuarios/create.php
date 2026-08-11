@@ -42,8 +42,22 @@ ob_start();
             <div>
                 <label for="perfil" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Perfil de Acesso</label>
                 <select id="perfil" name="perfil" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all appearance-none">
-                    <option value="MEMBRO">Voluntário / Membro</option>
-                    <option value="LIDER">Líder de Célula</option>
+                    <optgroup label="Perfis do Sistema">
+                        <option value="MEMBRO">Voluntário / Membro</option>
+                        <option value="LIDER">Líder de Célula</option>
+                    </optgroup>
+                    <?php if (!empty($perfilsCustomizados)): ?>
+                        <optgroup label="Perfis Customizados">
+                            <?php foreach ($perfilsCustomizados as $pc): ?>
+                                <option value="<?= htmlspecialchars($pc['nome'], ENT_QUOTES) ?>">
+                                    <?= htmlspecialchars($pc['nome'], ENT_QUOTES) ?>
+                                    <?php if (!empty($pc['descricao'])): ?>
+                                        — <?= htmlspecialchars($pc['descricao'], ENT_QUOTES) ?>
+                                    <?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                    <?php endif; ?>
                 </select>
             </div>
 

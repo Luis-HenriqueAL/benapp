@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS liturgias (
     id SERIAL PRIMARY KEY,
     celula_id INT NOT NULL,
-    data_liturgia DATE NOT NULL
+    data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
+    data_liturgia DATE,
+    tema VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS momentos_liturgia (

@@ -67,13 +67,17 @@ class AuthController {
         }
 
         $_SESSION['user'] = [
-            'id' => $user['id'],
-            'nome' => $user['nome'],
-            'email' => $user['email'],
-            'perfil' => $user['perfil'],
+            'id'        => $user['id'],
+            'nome'      => $user['nome'],
+            'email'     => $user['email'],
+            'perfil'    => $user['perfil'],
             'celula_id' => $user['celula_id']
         ];
         $_SESSION['celula_id'] = $user['celula_id'];
+
+        // Carrega as permissões do perfil na sessão para uso em todo o sistema
+        $perfilModel = new \Models\Perfil();
+        $_SESSION['permissoes'] = $perfilModel->getPermissoesPorNome($user['celula_id'], $user['perfil']);
 
         header("Location: /");
         exit;

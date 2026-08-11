@@ -89,10 +89,26 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
     } else {
         $controller->create();
     }
-} elseif (preg_match('/^\/escala\/\d+$/', $uri)) {
-    // Rota de visualização de escala específica (ex: /escala/1)
+} elseif ($uri === '/escala/show' || preg_match('/^\/escala\/\d+$/', $uri)) {
     $controller = new \Controllers\EscalaController();
-    $controller->index();
+    $controller->show();
+} elseif ($uri === '/escala/delete') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            \Helpers\SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $controller = new \Controllers\EscalaController();
+            $controller->delete($_SESSION['celula_id'], $_POST);
+            header("Location: /escala");
+            exit;
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
 } elseif ($uri === '/usuarios') {
     $controller = new \Controllers\UsuarioController();
     $controller->index();
@@ -117,6 +133,61 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
 } elseif ($uri === '/celula/update') {
     $controller = new \Controllers\CelulaController();
     $controller->update();
+} elseif ($uri === '/liturgia/momentos') {
+    $controller = new \Controllers\MomentoLiturgiaController();
+    $controller->index();
+} elseif ($uri === '/liturgia/momentos/store') {
+    $controller = new \Controllers\MomentoLiturgiaController();
+    $controller->store();
+} elseif ($uri === '/liturgia/momentos/delete') {
+    $controller = new \Controllers\MomentoLiturgiaController();
+    $controller->delete();
+} elseif ($uri === '/perfil') {
+    $controller = new \Controllers\PerfilController();
+    $controller->index();
+} elseif ($uri === '/perfil/create') {
+    $controller = new \Controllers\PerfilController();
+    $controller->create();
+} elseif ($uri === '/perfil/store') {
+    $controller = new \Controllers\PerfilController();
+    $controller->store();
+} elseif ($uri === '/perfil/edit') {
+    $controller = new \Controllers\PerfilController();
+    $controller->edit();
+} elseif ($uri === '/perfil/update') {
+    $controller = new \Controllers\PerfilController();
+    $controller->update();
+} elseif ($uri === '/perfil/delete') {
+    $controller = new \Controllers\PerfilController();
+    $controller->delete();
+} elseif ($uri === '/presenca/confirmar') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $controller = new \Controllers\PresencaController();
+            $controller->confirmar();
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
+} elseif ($uri === '/presenca/cancelar') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $controller = new \Controllers\PresencaController();
+            $controller->cancelar();
+        } catch (\Exception $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header("Location: /escala");
+            exit;
+        }
+    } else {
+        header("Location: /escala");
+        exit;
+    }
 } else {
     http_response_code(404);
     $errorMessage = "Página não encontrada (404): " . htmlspecialchars($uri);

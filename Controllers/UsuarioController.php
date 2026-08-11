@@ -21,11 +21,30 @@ class UsuarioController {
     }
 
     /**
+     * Redireciona com erro se o usuário não possuir a permissão informada.
+     *
+     * @param string $chave Chave da permissão.
+     * @return void
+     */
+    private function requirePermissao($chave) {
+        if (!SecurityHelper::hasPermissao($chave)) {
+            $_SESSION['flash_error'] = "Sem permissão para executar esta ação.";
+            header("Location: /usuarios");
+            exit;
+        }
+    }
+
+    /**
      * Exibe a listagem de usuários da célula.
      *
      * @return void
      */
     public function index() {
+        if (!SecurityHelper::hasPermissao('usuarios.view')) {
+            $_SESSION['flash_error'] = "Sem permissão para visualizar membros.";
+            header("Location: /");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $usuarios = $this->usuarioModel->findByCelulaId($celula_id);
         require_once __DIR__ . '/../Views/usuarios/index.php';
@@ -37,6 +56,10 @@ class UsuarioController {
      * @return void
      */
     public function create() {
+        $this->requirePermissao('usuarios.manage');
+        $celula_id = $_SESSION['celula_id'] ?? 1;
+        $perfilModel = new \Models\Perfil();
+        $perfilsCustomizados = $perfilModel->findAll($celula_id);
         require_once __DIR__ . '/../Views/usuarios/create.php';
     }
 
@@ -46,6 +69,7 @@ class UsuarioController {
      * @return void
      */
     public function store() {
+        $this->requirePermissao('usuarios.manage');
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
 
@@ -85,6 +109,7 @@ class UsuarioController {
      * @return void
      */
     public function edit() {
+        $this->requirePermissao('usuarios.manage');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = $_GET['id'] ?? null;
         if (!$id) {
@@ -99,6 +124,8 @@ class UsuarioController {
             exit;
         }
 
+        $perfilModel = new \Models\Perfil();
+        $perfilsCustomizados = $perfilModel->findAll($celula_id);
         require_once __DIR__ . '/../Views/usuarios/edit.php';
     }
 
@@ -108,6 +135,7 @@ class UsuarioController {
      * @return void
      */
     public function update() {
+        $this->requirePermissao('usuarios.manage');
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = $_POST['id'] ?? null;
@@ -148,6 +176,7 @@ class UsuarioController {
      * @return void
      */
     public function delete() {
+        $this->requirePermissao('usuarios.manage');
         SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = $_POST['id'] ?? null;

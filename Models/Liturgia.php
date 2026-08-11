@@ -25,6 +25,45 @@ class Liturgia {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
+        $this->ensureSchema();
+    }
+
+    /**
+     * Garante a criação da tabela e colunas data_culto, data_liturgia e tema no PostgreSQL / SQLite.
+     *
+     * @return void
+     */
+    private function ensureSchema() {
+        try {
+            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
+            if ($driver === 'sqlite') {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS liturgias (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        celula_id INT NOT NULL DEFAULT 1,
+                        data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
+                        data_liturgia DATE,
+                        tema VARCHAR(255)
+                    );
+                ");
+            } else {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS liturgias (
+                        id SERIAL PRIMARY KEY,
+                        celula_id INT NOT NULL DEFAULT 1,
+                        data_culto DATE NOT NULL DEFAULT CURRENT_DATE,
+                        data_liturgia DATE,
+                        tema VARCHAR(255)
+                    );
+                ");
+
+                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS data_culto DATE DEFAULT CURRENT_DATE;");
+                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS data_liturgia DATE;");
+                $this->conn->exec("ALTER TABLE liturgias ADD COLUMN IF NOT EXISTS tema VARCHAR(255);");
+            }
+        } catch (\PDOException $e) {
+            // Ignora se tabela/coluna já existir
+        }
     }
 
     /**
@@ -47,19 +86,35 @@ class Liturgia {
      * @param int $celula_id Identificador do tenant.
      * @param string $data_culto Data do culto (Y-m-d).
      * @param string $tema Tema do culto.
-     * @return bool Retorna verdadeiro se for criado com sucesso.
+     * @return bool|int Retorna o ID gerado se for criado com sucesso.
      */
     public function create($celula_id, $data_culto, $tema) {
-        $query = "INSERT INTO " . $this->table_name . " (celula_id, data_culto, tema) VALUES (:celula_id, :data_culto, :tema)";
+        $query = "INSERT INTO " . $this->table_name . " (celula_id, data_culto, data_liturgia, tema) VALUES (:celula_id, :data_culto, :data_liturgia, :tema)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':celula_id', $celula_id);
         $stmt->bindParam(':data_culto', $data_culto);
+        $stmt->bindParam(':data_liturgia', $data_culto);
         $stmt->bindParam(':tema', $tema);
         if ($stmt->execute()) {
             $lastId = $this->conn->lastInsertId();
             return $lastId ? (int)$lastId : true;
         }
         return false;
+    }
+
+    /**
+     * Remove uma liturgia (e suas escalas via CASCADE) garantindo isolamento multi-tenant.
+     *
+     * @param int $celula_id Identificador da célula (tenant).
+     * @param int $id Identificador da liturgia a ser removida.
+     * @return bool Retorna verdadeiro se deletado com sucesso.
+     */
+    public function delete($celula_id, $id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id AND celula_id = :celula_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
+        $stmt->bindParam(':celula_id', $celula_id, \PDO::PARAM_INT);
+        return $stmt->execute() && $stmt->rowCount() > 0;
     }
 
     /**

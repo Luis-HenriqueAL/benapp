@@ -4,11 +4,17 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/EscalaControllerTest.php';
 require_once __DIR__ . '/UsuarioControllerTest.php';
 require_once __DIR__ . '/CelulaControllerTest.php';
+require_once __DIR__ . '/MomentoLiturgiaControllerTest.php';
+require_once __DIR__ . '/LiturgiaModelTest.php';
+require_once __DIR__ . '/EscalaModelTest.php';
 
 $testClasses = [
     new EscalaControllerTest(),
     new UsuarioControllerTest(),
-    new CelulaControllerTest()
+    new CelulaControllerTest(),
+    new MomentoLiturgiaControllerTest(),
+    new LiturgiaModelTest(),
+    new EscalaModelTest()
 ];
 
 $passed = 0;
@@ -24,6 +30,9 @@ foreach ($testClasses as $test) {
             $test->expectedException = null;
             $test->expectedExceptionMessage = null;
             try {
+                if (method_exists($test, 'setUp')) {
+                    $test->setUp();
+                }
                 $test->$method();
                 if ($test->expectedException !== null) {
                     echo "[FAIL] {$method}: Exceção {$test->expectedException} era esperada, mas nenhuma foi lançada.\n";

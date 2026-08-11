@@ -40,21 +40,80 @@ class EscalaController {
     }
 
     /**
-     * Renderiza o dashboard / lista principal de escalas da célula.
+     * Renderiza o dashboard com as escalas/cultos reais cadastrados na célula logada.
      *
      * @return void
      */
     public function index() {
+        $celula_id = $_SESSION['celula_id'] ?? 1;
+        $escalas = $this->escalaModel->getEscalasComLiturgia($celula_id);
+        $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
         require_once __DIR__ . '/../Views/Escala/index.php';
     }
 
     /**
+     * Exibe o detalhamento completo de uma escala/culto específico.
+     *
+     * @return void
+     */
+    public function show() {
+        $celula_id = $_SESSION['celula_id'] ?? 1;
+        $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
+
+        $liturgia = $this->escalaModel->getLiturgiaDetails($celula_id, $id);
+        if (!$liturgia) {
+            $_SESSION['flash_error'] = "Evento ou escala não encontrada.";
+            header("Location: /escala");
+            exit;
+        }
+
+        $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
+
+        // Carrega presenças do evento
+        $presencaModel = new \Models\Presenca();
+        $presencas = $presencaModel->findByLiturgia($celula_id, $id);
+        $usuarioLogadoConfirmado = $presencaModel->jaConfirmado($id, (int)($_SESSION['user']['id'] ?? 0));
+
+        require_once __DIR__ . '/../Views/Escala/show.php';
+    }
+
+    /**
+     * Remove um evento/liturgia (e todas as atribuições vinculadas) da célula.
+     * Restrito ao perfil LIDER.
+     *
+     * @param int $celula_id Identificador da célula (tenant).
+     * @param array $data Dados POST contendo 'liturgia_id'.
+     * @throws \Exception Se o perfil não for LIDER ou o evento não for encontrado.
+     * @return void
+     */
+    public function delete($celula_id, $data) {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.delete')) {
+            throw new \Exception("Sem permissão para excluir eventos.");
+        }
+
+        $liturgiaId = (int)($data['liturgia_id'] ?? 0);
+        if (!$liturgiaId) {
+            throw new \Exception("ID do evento inválido.");
+        }
+
+        $deleted = $this->liturgiaModel->delete($celula_id, $liturgiaId);
+        if (!$deleted) {
+            throw new \Exception("Evento não encontrado ou não pertence à sua célula.");
+        }
+    }
+
+    /**
      * Renderiza a tela de criação/edição dinâmica de escala e liturgia.
-     * Carrega automaticamente as informações cadastrais da célula (nome e horário) e os momentos predefinidos.
+     * Requer permissão 'escala.create'.
      *
      * @return void
      */
     public function create() {
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
+            $_SESSION['flash_error'] = "Sem permissão para criar escalas.";
+            header("Location: /escala");
+            exit;
+        }
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
         $momentosPredefinidos = $this->escalaModel->getMomentosPredefinidos($celula_id);
@@ -63,13 +122,12 @@ class EscalaController {
         require_once __DIR__ . '/../Views/Escala/create.php';
     }
 
-
     /**
      * Cadastra uma nova escala/liturgia ou atribui voluntários respeitando o isolamento do tenant e checando conflitos.
      *
      * @param int $celula_id Identificador da célula (tenant).
      * @param array $data Dados vindos do formulário POST.
-     * @throws \Exception Se o voluntário/liturgia não for encontrado ou se houver conflito de horário.
+     * @throws \Exception Se a data for omitida ou se houver erro ao salvar.
      * @return bool Retorna verdadeiro se a atribuição for concluída.
      */
     public function store($celula_id, $data) {
@@ -93,7 +151,7 @@ class EscalaController {
                 throw new \Exception("Conflito de horário: o voluntário já está escalado para este culto.");
             }
 
-            $success = $this->escalaModel->create($liturgia_id, $usuario_id, $funcao_id);
+            $success = $this->escalaModel->create($liturgia_id, $usuario_id, $funcao_id, $celula_id);
 
             if ($success) {
                 $mockUsuario = ['nome' => $usuario['nome'] ?? 'Voluntário', 'email' => $usuario['email'] ?? 'teste@email.com', 'telefone' => '11999999999'];
@@ -104,22 +162,23 @@ class EscalaController {
             return $success;
         }
 
-        // Validação e processamento do formulário enviado via POST /escala/store
-        $evento = isset($data['evento']) ? trim($data['evento']) : '';
+        // Validação do formulário enviado via POST /escala/store
+        $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
+        $nomeDefault = !empty($celulaInfo['nome']) ? $celulaInfo['nome'] : (!empty($celulaInfo['nome_celula']) ? $celulaInfo['nome_celula'] : 'Célula Boas Novas');
+        $horaDefault = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'], 0, 5) : '19:30';
+
         $dataCulto = isset($data['data']) ? trim($data['data']) : '';
-        $horaCulto = isset($data['hora']) ? trim($data['hora']) : '';
-        $liderId = isset($data['lider_id']) ? (int)$data['lider_id'] : null;
+        $horaCulto = !empty($data['hora']) ? trim($data['hora']) : $horaDefault;
         $momentos = isset($data['momentos']) && is_array($data['momentos']) ? $data['momentos'] : [];
 
-        if (empty($evento)) {
+        if (!isset($data['evento']) || trim($data['evento']) === '') {
             throw new \Exception("O nome do evento/culto é obrigatório.");
         }
         if (empty($dataCulto)) {
             throw new \Exception("A data do culto é obrigatória.");
         }
-        if (empty($liderId)) {
-            throw new \Exception("O líder responsável é obrigatório.");
-        }
+
+        $evento = !empty($data['evento']) ? trim($data['evento']) : "Culto de Célula - {$nomeDefault}";
 
         // 1. Cadastra a liturgia no banco
         $liturgiaId = $this->liturgiaModel->create($celula_id, $dataCulto, $evento);
@@ -128,6 +187,7 @@ class EscalaController {
         }
 
         // 2. Processa cada momento litúrgico e vincula voluntários
+        // Um voluntário pode ser responsável por mais de um momento na mesma liturgia.
         foreach ($momentos as $index => $momento) {
             $tituloMomento = isset($momento['titulo']) ? trim($momento['titulo']) : '';
             $voluntarioId = !empty($momento['voluntario_id']) ? (int)$momento['voluntario_id'] : null;
@@ -139,13 +199,8 @@ class EscalaController {
                     throw new \Exception("Voluntário (ID: {$voluntarioId}) não foi encontrado ou não pertence a esta célula.");
                 }
 
-                // Valida conflito de horário
-                if (is_numeric($liturgiaId) && $this->escalaModel->hasConflict($voluntarioId, $liturgiaId)) {
-                    throw new \Exception("Conflito de horário: o voluntário '{$usuario['nome']}' já possui atribuição neste culto.");
-                }
-
                 $funcaoNome = !empty($tituloMomento) ? $tituloMomento : "Momento " . ($index + 1);
-                $this->escalaModel->create($liturgiaId, $voluntarioId, $funcaoNome);
+                $this->escalaModel->create($liturgiaId, $voluntarioId, $funcaoNome, $celula_id);
 
                 $this->notificationService->sendEscalaNotification($usuario, [
                     'funcao' => $funcaoNome,
@@ -176,8 +231,8 @@ class EscalaController {
             $usuario_id = $registro['usuario_id'];
             $funcao_id = $registro['funcao_id'];
             
-            if (!$this->escalaModel->hasConflict($usuario_id, $nova_liturgia_id)) {
-                $this->escalaModel->create($nova_liturgia_id, $usuario_id, $funcao_id);
+            if (!$this->escalaModel->hasConflict($usuario_id, $nova_liturgia_id, $celula_id)) {
+                $this->escalaModel->create($nova_liturgia_id, $usuario_id, $funcao_id, $celula_id);
                 $escalados_com_sucesso[] = $usuario_id;
             }
         }

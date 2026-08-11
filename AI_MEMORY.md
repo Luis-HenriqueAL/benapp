@@ -19,12 +19,14 @@ Sistema de Gestão de Células (benApp).
 - Tailwind CSS (Interface Web-Mobile State-of-the-Art)
 
 ## Decisões de Arquitetura
-- **MVC & Clean Architecture**: Separação rigorosa entre Models (`Usuario`, `Escala`, `Liturgia`, `CelulaInfo`), Controllers (`AuthController`, `EscalaController`, `UsuarioController`, `CelulaController`, etc.) e Views.
+- **MVC & Clean Architecture**: Separação rigorosa entre Models (`Usuario`, `Escala`, `Liturgia`, `CelulaInfo`), Controllers (`AuthController`, `EscalaController`, `UsuarioController`, `CelulaController`, `MomentoLiturgiaController`, etc.) e Views.
+- **Módulo de Momentos Litúrgicos & Navegação**: Tela `/liturgia/momentos` (`MomentoLiturgiaController`) para gestão visual de momentos da liturgia com link de atalho atualizado no Menu Lateral (Sidebar).
 - **Módulo de Informações da Célula**: Interface e rotas (`/celula` e `/celula/update`) para gestão cadastral da célula com persistência PostgreSQL em `celulas_info` (suporte a `anfitrioes` e `lideres` via JSONB).
 - **Integração ViaCEP**: Autopreenchimento assíncrono de endereço via API ViaCEP no frontend ao digitar o CEP.
+- **Simplificação da Criação de Escalas & Liturgia Dinâmica**: Autopreenchimento de dados da célula (nome, horário e dia do encontro) na criação de escalas e reordenação de momentos litúrgicos via botões Subir/Descer e Drag & Drop (HTML5).
 - **Tratamento de Rotas & Asset Handling**: Resolução e eliminação de falso-positivos de erro 404 em roteamento e requisições de assets estáticos.
-- **Módulo de Usuários**: CRUD completo e gestão de usuários com controle de permissões por papel/perfil e isolamento multi-tenant por `celula_id`.
-- **Interface Web-Mobile State-of-the-Art**: Redesenho responsivo de alta precisão UX/UI com Menu Lateral Retrátil (Sidebar), adaptável a dispositivos móveis e desktop.
+- **Módulo de Usuários & Multi-tenancy**: CRUD completo e consulta de usuários por célula via `findByCelula` no `UsuarioModel` (`Models/Usuario.php`) corrigida com isolamento multi-tenant por `celula_id`.
+- **Interface Web-Mobile State-of-the-Art**: Redesenho responsivo de alta precisão UX/UI com Menu Lateral Retrátil (Sidebar) atualizado com atalho para momentos litúrgicos, adaptável a dispositivos móveis e desktop.
 - **Acessibilidade WCAG**: Conformidade com padrões WCAG (contraste visual, atributos ARIA, suporte a leitores de tela e navegação por teclado).
 - **Gerenciamento de Dependências**: Composer configurado no projeto com suporte a autoload PSR-4.
 - **Padronização de Código**: 100% de cobertura de DocBlocks (PHPDoc) em todas as funções, métodos e classes do codebase.
@@ -36,16 +38,20 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Resolução da chamada `findByCelula` no `UsuarioModel` (`Models/Usuario.php`) corrigindo e garantindo a busca de usuários com filtro multi-tenant.
+  - Implementação da nova tela e rotas `/liturgia/momentos` (`MomentoLiturgiaController`) para cadastro e gestão de momentos da liturgia.
+  - Atualização da barra de navegação/menu lateral (Sidebar) com inclusão de link para a nova tela `/liturgia/momentos`.
+  - Simplificação da criação de escalas com autopreenchimento de dados da célula (nome, horário e dia da semana) e reordenação flexível de momentos litúrgicos (Subir/Descer e Drag & Drop).
   - Módulo de Informações da Célula (`CelulaController`, `Views/Celula/index.php`, `Models/CelulaInfo.php`) com rotas GET `/celula` e POST `/celula/update`.
   - Integração frontend com a API ViaCEP para consulta e preenchimento dinâmico de endereços.
   - Correção de falso-positivos de erro 404 em assets e roteamento da aplicação.
-  - 100% de cobertura de DocBlocks (PHPDoc) mantida em todas as classes, métodos e funções.
+  - 100% de cobertura de DocBlocks (PHPDoc) mantida integralmente em todas as classes, métodos e funções.
   - Validação unânime e sequencial concluída por toda a esteira de engenharia (PM, Arquiteto, Backend, Frontend, QA & Cibersegurança).
   - Padronização do título "Nova Escala" em `Views/Escala/create.php` e layout de montagem dinâmica de cultos/liturgias.
   - Rota POST `/escala/store` configurada e integrada no controller (`EscalaController::store()`).
   - Proteções ativas: CSRF (`SecurityHelper`), sanitização contra XSS, validação de multi-tenancy (`celula_id`) e prevenção contra conflitos de horários.
-  - Suíte de testes unitários (`tests/EscalaControllerTest.php` e `tests/UsuarioControllerTest.php`) implementada.
-  - Redesenho do Layout State-of-the-Art Web-Mobile finalizado e otimizado.
+  - Suíte de testes unitários (`tests/EscalaControllerTest.php`, `tests/UsuarioControllerTest.php` e `tests/MomentoLiturgiaControllerTest.php`) implementada.
+  - Redesenho do Layout State-of-the-Art Web-Mobile finalizado e otimizado com Sidebar retrátil.
   - Ajustes e validações de Acessibilidade WCAG implementados.
   - Módulo de Usuários completo com CRUD, controle de acesso e isolamento por `celula_id`.
   - Sistema de Autenticação (Login, Logout e Controle de Sessão) validado.

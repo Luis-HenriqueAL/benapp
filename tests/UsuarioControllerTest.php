@@ -12,6 +12,16 @@ use Helpers\SecurityHelper;
 class UsuarioControllerTest extends TestCase {
 
     /**
+     * Configura a sessão simulada com permissões para os testes.
+     */
+    protected function setUp(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['user'] = ['id' => 1, 'nome' => 'Teste', 'perfil' => 'MEMBRO', 'celula_id' => 1];
+        $_SESSION['celula_id'] = 1;
+        $_SESSION['permissoes'] = ['usuarios.view', 'usuarios.manage', 'escala.view', 'escala.create'];
+    }
+
+    /**
      * Testa se o token CSRF é exigido no cadastro (store).
      */
     public function testStoreRequiresValidCsrfToken() {

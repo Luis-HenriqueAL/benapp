@@ -92,6 +92,16 @@ class Usuario {
     }
 
     /**
+     * Alias para findByCelulaId para compatibilidade com chamadas no Controller.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @return array Lista de usuários da célula.
+     */
+    public function findByCelula($celula_id) {
+        return $this->findByCelulaId($celula_id);
+    }
+
+    /**
      * Busca um usuário por ID garantindo o isolamento de célula.
      *
      * @param int $celula_id Identificador da célula.
