@@ -2,6 +2,15 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [1.8.0] - Correção no Docker Compose, Microserviço CifraClub API e Tablaturas (🎸 Tabs)
+### Corrigido
+- **Case-Sensitivity no Docker Compose**: Ajustado o caminho de build do microserviço `cifraclub-api` no `docker-compose.yml` para `./Services/cifraclub-api` (com maiúscula), corrigindo falha de inicialização em sistemas Linux e permitindo o boot perfeito dos containers (`app`, `db` e `cifraclub-api`).
+
+### Adicionado / Otimizado
+- **Visualizador de Cifras e Tablaturas**: Adicionado seletor e filtro dinâmico de Tablaturas (`🎸 Tabs`) e controles de velocidade de autorolagem no [Views/Escala/cifra.php](file:///home/luis/dev/projetos/benApp/Views/Escala/cifra.php).
+
+---
+
 ## [1.7.0] - Tela /liturgia/momentos, Resolução findByCelula em UsuarioModel, Menu Lateral e DocBlocks 100%
 ### Adicionado / Otimizado
 - **Módulo de Momentos Litúrgicos (`/liturgia/momentos`)**: Implementação do controller `MomentoLiturgiaController` e views para cadastro e gerenciamento de momentos litúrgicos.

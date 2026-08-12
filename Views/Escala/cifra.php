@@ -48,6 +48,10 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
                         class="px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95">
                         📝 Letra
                     </button>
+                    <button id="btn-modo-tabs" type="button" onclick="toggleTabs()"
+                        class="px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95" title="Mostrar ou ocultar tablatura">
+                        🎸 Tabs
+                    </button>
                 </div>
 
                 <!-- Tamanho de Fonte -->
@@ -211,6 +215,7 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
     const MUSICA_IDS = <?= $musicaIdsJson ?>;
     let musicaAtualIndex = <?= $musicaInicialJson ?>;
     let modoExibicaoAtual = 'cifra';
+    let mostrarTabs = true;
     let currentFontSize = 14;
     let autoScrollTimer = null;
     let scrollSpeedLevel = 4;
@@ -305,6 +310,20 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
     }
 
     // ──────────────────────────────────────────────────────
+    // Toggle de Tabs
+    // ──────────────────────────────────────────────────────
+    function toggleTabs() {
+        mostrarTabs = !mostrarTabs;
+        const btn = document.getElementById('btn-modo-tabs');
+        if (btn) {
+            btn.className = mostrarTabs
+                ? 'px-3 py-1.5 rounded-xl bg-transparent text-purple-700 hover:bg-purple-100 font-bold text-xs transition active:scale-95'
+                : 'px-3 py-1.5 rounded-xl bg-slate-200 text-slate-500 line-through font-bold text-xs transition active:scale-95';
+        }
+        MUSICA_IDS.forEach(id => aplicarTransposicao(id));
+    }
+
+    // ──────────────────────────────────────────────────────
     // Modo Exibição (Cifra / Apenas Letra)
     // ──────────────────────────────────────────────────────
     function setModoExibicao(modo) {
@@ -349,14 +368,24 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
         return chord.replace(/[A-G][#b]?/g, m => transposeNote(m, st));
     }
 
+    function isTabLine(line) {
+        const trimmed = line.trim();
+        if (!trimmed) return false;
+        // Linha com prefixo de corda (ex: e|, B|, G|, D|, A|, E|)
+        if (/^[eEBGDAd]\|/.test(trimmed)) return true;
+        // Linha iniciando com | e contendo apenas chars de tab
+        if (/^\|[-0-9hpbr\/\\|]+\|?/.test(trimmed)) return true;
+        // Linha composta só de traços, números e separadores
+        if (/^[-|0-9hpbr\/\\\s]+$/.test(trimmed) && /[-]{2,}/.test(trimmed) && !/[a-zA-Z]{2,}/.test(trimmed)) return true;
+        return false;
+    }
+
     function isChordLine(line) {
         const trimmed = line.trim();
         if (!trimmed) return false;
 
-        // Detecta linha de tablatura (ex: e|---0---3-, B|--1----, etc.)
-        if (/^[eEBGDAd]\|/.test(trimmed) || /^\|[-0-9hpbr\/\\|]+\|?/.test(trimmed)) return true;
-        // Detecta linha composta apenas de traços, números e separadores (tabs puras)
-        if (/^[-|0-9hpbr\/\\\s]+$/.test(trimmed) && /[\-]{2,}/.test(trimmed) && !/[a-zA-Z]{2,}/.test(trimmed)) return true;
+        // Tabs são também removidas no modo letra
+        if (isTabLine(trimmed)) return true;
 
         const words = trimmed.split(/\s+/);
         // Acorde: começa com A-G, pode ter #/b, sufixo e inversão
@@ -389,15 +418,17 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
 
         let processed;
         if (modoExibicaoAtual === 'letra') {
-            // Remove linhas de acordes — mantém apenas linhas de letra
+            // Remove linhas de acordes e tabs — mantém apenas letra
             processed = lines.filter(l => !isChordLine(l));
         } else {
             processed = lines.map(l => {
-                if (offset !== 0 && isChordLine(l)) {
+                // Oculta tabs se a opção estiver desativada
+                if (!mostrarTabs && isTabLine(l)) return null;
+                if (offset !== 0 && isChordLine(l) && !isTabLine(l)) {
                     return l.replace(chordTokenRe, m => transposeChordToken(m, offset));
                 }
                 return l;
-            });
+            }).filter(l => l !== null);
         }
 
         preElem.textContent = processed.join('\n');

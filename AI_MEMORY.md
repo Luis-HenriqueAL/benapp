@@ -38,6 +38,7 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Correção de Build/Execução do Docker Compose: Ajustado o caminho do contexto de build do microserviço `cifraclub-api` no `docker-compose.yml` para `./Services/cifraclub-api` (respeitando a diferenciação de maiúsculas/minúsculas do sistema de arquivos Linux), garantindo a inicialização completa dos containers (`app`, `db` e `cifraclub-api`).
   - Visualizador de Cifras Aprimorado: Paleta clara (bg-slate-50/text-slate-800), autorolagem acelerada com seletor de velocidade em linha dedicada abaixo dos botões, botão **"Próxima Música"**, modo **"Apenas Letra"** com filtro correto de linhas de acordes/tabs e header fixo com backdrop-blur.
   - Modo de Visualização "Apenas Letra" & Cifra Completa: Adicionados botões no topo de `Views/Escala/cifra.php` (**`🎼 Cifra`** VS **`📝 Apenas Letra`**) que filtram dinamicamente as linhas de acordes no navegador para vocalistas e membros.
   - Transposição Cromática de Tom em Tempo Real: Adicionado painel interativo em `Views/Escala/cifra.php` com botões **`-1 Semi`**, **`+1 Semi`** e **`Resetar`**, suporte a acordes maiores simples (`C`, `D`, `E`, `F`, `G`, `A`, `B`), inversões (`G/B`), sufixos complexos e algoritmo inteligente de identificação de linhas de cifragem (`isChordLine`) preservando a letra da música intacta.
