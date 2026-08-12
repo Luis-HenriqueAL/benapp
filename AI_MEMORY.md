@@ -38,6 +38,7 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Elaboração e Criação do `README.md` Oficial: Criado o arquivo [README.md](file:///home/luis/dev/projetos/benApp/README.md) completo e formatado com badges de tecnologia, arquitetura de microserviços, guia rápido de execução via Docker Compose, credenciais padrão de demonstração, lista de funcionalidades (visitante, transposição, cifras, multi-tenant) e mapa de diretórios.
   - Ocultação de Botões de Confirmação para Visitantes: Ocultados os botões "Eu Vou", "Confirmar Membro" e "Novo Visitante" na view `Views/Escala/show.php` e adicionada trava de segurança em `PresencaController.php` bloqueando ações de modificação para sessões de visitantes.
   - Correção de Permissão de Visualização para Visitante (`escala.view`): Atualizado `SecurityHelper::hasPermissao('escala.view')` para retornar `true` quando a sessão ativa for de visitante (`$_SESSION['visitante']`), liberando a rota `EscalaController::show()` e `/escala/cifra` em modo *Read-Only* sem mensagens de erro de permissão.
   - Correção na Exibição de Transposição de Tonalidades Menores (ex: `Em`, `Am`): Atualizada a função `aplicarTransposicao` em `Views/Escala/cifra.php` utilizando `transposeChordToken` no badge de indicação do Tom da música, permitindo que tonalidades menores e com sufixos sejam transpostas e exibidas perfeitamente na tela.
