@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS presencas (
     qtd_visitas INT DEFAULT 1,
     tipo VARCHAR(20) DEFAULT 'membro',
     registrado_por_id INT NULL,
+    codigo_acesso VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,8 +126,8 @@ FOR EACH ROW EXECUTE FUNCTION trg_liturgia_estudo();
 -- Seeds Iniciais
 INSERT INTO usuarios (celula_id, nome, email, senha, perfil)
 VALUES 
-(1, 'Líder Principal', 'admin@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'LIDER'),
-(1, 'Voluntário João', 'joao@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'MEMBRO')
+(1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER'),
+(1, 'Voluntário João', 'joao@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'MEMBRO')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio, is_louvor)

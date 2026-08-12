@@ -19,14 +19,32 @@ $atribuicoes = $liturgia['atribuicoes'] ?? [];
 
 $nomeCelula = !empty($celulaInfo['nome']) ? $celulaInfo['nome'] : (!empty($celulaInfo['nome_celula']) ? $celulaInfo['nome_celula'] : 'Célula Boas Novas');
 $horarioCelula = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'], 0, 5) : '19:30';
+$isVisitorMode = isset($_SESSION['visitante']) && !isset($_SESSION['user']);
 
 ob_start(); 
 ?>
 <div class="space-y-5 max-w-md mx-auto pb-6">
+    <?php if ($isVisitorMode): ?>
+        <div class="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 text-white rounded-3xl p-4 shadow-lg border border-purple-400/30 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-extrabold text-lg">
+                    🎟️
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-purple-200">Acesso Visitante</p>
+                    <p class="text-sm font-black"><?= SecurityHelper::e($_SESSION['visitante']['nome'] ?? 'Visitante') ?></p>
+                </div>
+            </div>
+            <a href="/visitante/sair" class="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white font-extrabold text-xs rounded-xl transition border border-white/20 backdrop-blur-md">
+                Sair
+            </a>
+        </div>
+    <?php endif; ?>
+
     <!-- Header da Seção -->
     <div class="bg-white rounded-3xl p-5 shadow-xl shadow-slate-200/50 border border-slate-100 flex justify-between items-center">
         <div class="flex items-center space-x-3.5 min-w-0">
-            <a href="/escala" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar para escalas">
+            <a href="<?= $isVisitorMode ? '/visitante/sair' : '/escala' ?>" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-100 transition-all active:scale-90 flex items-center justify-center shrink-0" aria-label="Voltar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
             </a>
             <div class="min-w-0">
@@ -228,93 +246,97 @@ ob_start();
                 <h3 class="font-extrabold text-slate-900 text-sm tracking-tight">Confirmados</h3>
                 <p class="text-[10px] text-slate-400 font-medium"><?= count($presencas ?? []) ?> pessoa(s) confirmada(s)</p>
             </div>
-            <?php if ($usuarioLogadoConfirmado ?? false): ?>
-                <form action="/presenca/cancelar" method="POST" data-confirm="Deseja cancelar sua confirmação de presença?">
-                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs transition-all hover:bg-emerald-100 active:scale-95">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                        Confirmado
-                    </button>
-                </form>
-            <?php else: ?>
-                <form action="/presenca/confirmar" method="POST">
-                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                    <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-blue-500/20">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                        Eu Vou
-                    </button>
-                </form>
+            <?php if (!$isVisitorMode): ?>
+                <?php if ($usuarioLogadoConfirmado ?? false): ?>
+                    <form action="/presenca/cancelar" method="POST" data-confirm="Deseja cancelar sua confirmação de presença?">
+                        <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                        <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                        <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold text-xs transition-all hover:bg-emerald-100 active:scale-95">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            Confirmado
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <form action="/presenca/confirmar" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                        <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                        <button type="submit" class="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-blue-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            Eu Vou
+                        </button>
+                    </form>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
 
-        <!-- Botões de Ação Secundária (Outro Membro / Visitante) -->
-        <div class="flex gap-2 pt-1">
-            <button type="button" onclick="toggleForm('formOutroMembro')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                Confirmar Membro
-            </button>
-            <button type="button" onclick="toggleForm('formVisitante')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-purple-50 text-purple-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                Novo Visitante
-            </button>
-        </div>
+        <?php if (!$isVisitorMode): ?>
+            <!-- Botões de Ação Secundária (Outro Membro / Visitante) -->
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="toggleForm('formOutroMembro')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-blue-50 text-blue-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    Confirmar Membro
+                </button>
+                <button type="button" onclick="toggleForm('formVisitante')" class="flex-1 py-2.5 px-3 bg-slate-50 hover:bg-purple-50 text-purple-600 border border-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Novo Visitante
+                </button>
+            </div>
 
-        <!-- Formulário para Confirmar Outro Membro -->
-        <div id="formOutroMembro" class="hidden bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
-            <h4 class="text-xs font-extrabold text-slate-800">Confirmar Presença de Membro</h4>
-            <form action="/presenca/confirmar" method="POST" class="space-y-3">
-                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                <div>
-                    <label for="usuario_id_select" class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Selecione o Membro</label>
-                    <select id="usuario_id_select" name="usuario_id" required class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600">
-                        <option value="">-- Escolha um membro da equipe --</option>
-                        <?php foreach ($todosUsuarios as $u): ?>
-                            <?php 
-                            $jaConf = array_filter($presencas ?? [], fn($p) => (($p['usuario_id'] ?? 0) == $u['id'])); 
-                            ?>
-                            <option value="<?= $u['id'] ?>" <?= !empty($jaConf) ? 'disabled' : '' ?>>
-                                <?= SecurityHelper::e($u['nome']) ?> (<?= SecurityHelper::e($u['perfil']) ?>) <?= !empty($jaConf) ? '- Já Confirmado' : '' ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="flex gap-2 justify-end">
-                    <button type="button" onclick="toggleForm('formOutroMembro')" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Confirmar Membro</button>
-                </div>
-            </form>
-        </div>
+            <!-- Formulário para Confirmar Outro Membro -->
+            <div id="formOutroMembro" class="hidden bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-800">Confirmar Presença de Membro</h4>
+                <form action="/presenca/confirmar" method="POST" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                    <div>
+                        <label for="usuario_id_select" class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Selecione o Membro</label>
+                        <select id="usuario_id_select" name="usuario_id" required class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <option value="">-- Escolha um membro da equipe --</option>
+                            <?php foreach ($todosUsuarios as $u): ?>
+                                <?php 
+                                $jaConf = array_filter($presencas ?? [], fn($p) => (($p['usuario_id'] ?? 0) == $u['id'])); 
+                                ?>
+                                <option value="<?= $u['id'] ?>" <?= !empty($jaConf) ? 'disabled' : '' ?>>
+                                    <?= SecurityHelper::e($u['nome']) ?> (<?= SecurityHelper::e($u['perfil']) ?>) <?= !empty($jaConf) ? '- Já Confirmado' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="toggleForm('formOutroMembro')" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Confirmar Membro</button>
+                    </div>
+                </form>
+            </div>
 
-        <!-- Formulário para Adicionar Visitante -->
-        <div id="formVisitante" class="hidden bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-3">
-            <h4 class="text-xs font-extrabold text-purple-900">Cadastrar Novo Visitante</h4>
-            <form action="/presenca/visitante" method="POST" class="space-y-3">
-                <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
-                <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
-                <div>
-                    <label for="nome_visitante" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Nome do Visitante</label>
-                    <input id="nome_visitante" type="text" name="nome_visitante" list="visitantes_historico" required placeholder="Ex: João da Silva" oninput="atualizarQtdVisitaVisitante(this.value)" class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
-                    <datalist id="visitantes_historico">
-                        <?php foreach ($visitantesHistorico ?? [] as $vh): ?>
-                            <option value="<?= SecurityHelper::e($vh['nome_visitante']) ?>" data-proxima-visita="<?= (int)($vh['max_visitas'] + 1) ?>">
-                                Visitante anterior (já foi <?= (int)$vh['max_visitas'] ?>x)
-                            </option>
-                        <?php endforeach; ?>
-                    </datalist>
-                </div>
-                <div>
-                    <label for="qtd_visitas" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Vezes que já foi à célula</label>
-                    <input id="qtd_visitas" type="number" name="qtd_visitas" value="1" min="1" required class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
-                </div>
-                <div class="flex gap-2 justify-end">
-                    <button type="button" onclick="toggleForm('formVisitante')" class="px-3 py-2 text-xs font-bold text-purple-600 hover:text-purple-800">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Cadastrar Visitante</button>
-                </div>
-            </form>
-        </div>
+            <!-- Formulário para Adicionar Visitante -->
+            <div id="formVisitante" class="hidden bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-3">
+                <h4 class="text-xs font-extrabold text-purple-900">Cadastrar Novo Visitante</h4>
+                <form action="/presenca/visitante" method="POST" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
+                    <input type="hidden" name="liturgia_id" value="<?= (int)$liturgia['id'] ?>">
+                    <div>
+                        <label for="nome_visitante" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Nome do Visitante</label>
+                        <input id="nome_visitante" type="text" name="nome_visitante" list="visitantes_historico" required placeholder="Ex: João da Silva" oninput="atualizarQtdVisitaVisitante(this.value)" class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        <datalist id="visitantes_historico">
+                            <?php foreach ($visitantesHistorico ?? [] as $vh): ?>
+                                <option value="<?= SecurityHelper::e($vh['nome_visitante']) ?>" data-proxima-visita="<?= (int)($vh['max_visitas'] + 1) ?>">
+                                    Visitante anterior (já foi <?= (int)$vh['max_visitas'] ?>x)
+                                </option>
+                            <?php endforeach; ?>
+                        </datalist>
+                    </div>
+                    <div>
+                        <label for="qtd_visitas" class="block text-[10px] font-bold text-purple-700 uppercase mb-1">Vezes que já foi à célula</label>
+                        <input id="qtd_visitas" type="number" name="qtd_visitas" value="1" min="1" required class="w-full px-3 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="toggleForm('formVisitante')" class="px-3 py-2 text-xs font-bold text-purple-600 hover:text-purple-800">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs">Cadastrar Visitante</button>
+                    </div>
+                </form>
+            </div>
+        <?php endif; ?>
 
         <!-- Lista de Confirmados (Membros + Visitantes) -->
         <?php if (!empty($presencas)): ?>
@@ -340,6 +362,16 @@ ob_start();
                                 <p class="text-[10px] text-purple-600 font-extrabold tracking-wide uppercase">
                                     Visitante • <?= (int)($p['qtd_visitas'] ?? 1) ?>ª visita à célula
                                 </p>
+                                <?php if (!empty($p['codigo_acesso'])): ?>
+                                    <div class="mt-1 flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 rounded-lg bg-purple-100/90 border border-purple-200 text-purple-800 text-[10px] font-black tracking-widest font-mono">
+                                            🎟️ <?= SecurityHelper::e($p['codigo_acesso']) ?>
+                                        </span>
+                                        <button type="button" onclick="navigator.clipboard.writeText('<?= SecurityHelper::e($p['codigo_acesso']) ?>'); alert('Código <?= SecurityHelper::e($p['codigo_acesso']) ?> copiado!')" class="text-[10px] font-bold text-purple-700 hover:text-purple-900 underline">
+                                            Copiar
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide"><?= SecurityHelper::e($p['usuario_perfil'] ?? 'MEMBRO') ?></p>
                             <?php endif; ?>

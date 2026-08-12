@@ -81,20 +81,36 @@ $currentUri = str_replace('/public', '', $currentUri);
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
 
-                <a href="/usuarios/edit?id=<?= (int)($currentUser['id'] ?? 0) ?>" class="flex items-center space-x-3.5 mt-2 group cursor-pointer hover:opacity-90 transition-opacity" title="Editar Meu Perfil">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 text-white font-extrabold text-xl shadow-inner group-hover:scale-105 transition-transform">
-                        <?= htmlspecialchars(substr($currentUser['nome'] ?? 'U', 0, 1)) ?>
+                <?php if (isset($_SESSION['visitante']) && !isset($_SESSION['user'])): ?>
+                    <div class="flex items-center space-x-3.5 mt-2">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 text-white font-extrabold text-xl shadow-inner">
+                            🎟️
+                        </div>
+                        <div>
+                            <h2 class="font-extrabold text-base tracking-tight leading-snug text-white">
+                                <?= htmlspecialchars($_SESSION['visitante']['nome'] ?? 'Visitante') ?>
+                            </h2>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20 mt-1 uppercase tracking-wider">
+                                VISITANTE
+                            </span>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="font-extrabold text-base tracking-tight leading-snug flex items-center gap-1.5">
-                            <?= htmlspecialchars($currentUser['nome'] ?? 'Usuário') ?>
-                            <svg class="w-3.5 h-3.5 text-white/70 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </h2>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20 mt-1 uppercase tracking-wider">
-                            <?= htmlspecialchars($currentUser['perfil'] ?? 'Membro') ?>
-                        </span>
-                    </div>
-                </a>
+                <?php else: ?>
+                    <a href="/usuarios/edit?id=<?= (int)($currentUser['id'] ?? 0) ?>" class="flex items-center space-x-3.5 mt-2 group cursor-pointer hover:opacity-90 transition-opacity" title="Editar Meu Perfil">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 text-white font-extrabold text-xl shadow-inner group-hover:scale-105 transition-transform">
+                            <?= htmlspecialchars(substr($currentUser['nome'] ?? 'U', 0, 1)) ?>
+                        </div>
+                        <div>
+                            <h2 class="font-extrabold text-base tracking-tight leading-snug flex items-center gap-1.5">
+                                <?= htmlspecialchars($currentUser['nome'] ?? 'Usuário') ?>
+                                <svg class="w-3.5 h-3.5 text-white/70 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </h2>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20 mt-1 uppercase tracking-wider">
+                                <?= htmlspecialchars($currentUser['perfil'] ?? 'Membro') ?>
+                            </span>
+                        </div>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <!-- Navegação Principal no Sidebar -->
@@ -149,7 +165,7 @@ $currentUri = str_replace('/public', '', $currentUri);
 
         <!-- Footer do Sidebar -->
         <div class="p-4 border-t border-slate-100">
-            <a href="/logout" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-bold text-sm text-red-600 hover:bg-red-50 transition-all active:scale-98">
+            <a href="<?= isset($_SESSION['visitante']) && !isset($_SESSION['user']) ? '/visitante/sair' : '/logout' ?>" class="flex items-center space-x-3.5 px-4 py-3.5 rounded-2xl font-bold text-sm text-red-600 hover:bg-red-50 transition-all active:scale-98">
                 <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 <span>Sair da Conta</span>
             </a>

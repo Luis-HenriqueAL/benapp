@@ -2,6 +2,58 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [1.9.6] - Restrição Visual e Backend de Ações para Visitante
+### Corrigido / Otimizado
+- **Interface Exclusiva de Leitura**: Ocultados os botões "Eu Vou", "Confirmar Membro" e "Novo Visitante" e formulários associados em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php) quando acessado via modo visitante (`$isVisitorMode`).
+- **Bloqueio Backend no PresencaController**: Adicionada trava de segurança no construtor de [Controllers/PresencaController.php](file:///home/luis/dev/projetos/benApp/Controllers/PresencaController.php) garantindo que sessões de visitantes sejam redirecionadas caso tentem invocar ações de modificação de presença.
+- **Navegação de Voltar Aprimorada**: Opcional de voltar no cabeçalho redireciona visitantes diretamente para a rota `/visitante/sair`.
+
+---
+
+## [1.9.5] - Liberação de Permissão de Visualização para Sessão de Visitante
+### Corrigido
+- **Permissão `escala.view` para Visitantes**: Atualizado [Helpers/SecurityHelper.php](file:///home/luis/dev/projetos/benApp/Helpers/SecurityHelper.php) (`hasPermissao`) para responder com `true` para a permissão `escala.view` em sessões de visitante (`$_SESSION['visitante']`), eliminando o alerta "Sem permissão" ao acessar a liturgia.
+- **Roteamento de Cifras de Visitante**: Incluída a rota `/escala/cifra` na lista de rotas autorizadas para visitantes em [public/index.php](file:///home/luis/dev/projetos/benApp/public/index.php).
+
+---
+
+## [1.9.4] - Correção na Transposição de Tonalidades Menores nas Cifras
+### Corrigido
+- **Atualização Visual do Tom Menor**: Ajustada a função JavaScript `aplicarTransposicao` em [Views/Escala/cifra.php](file:///home/luis/dev/projetos/benApp/Views/Escala/cifra.php) para utilizar `transposeChordToken(origTom, offset)` ao invés de `transposeNote`, permitindo que tonalidades menores (ex: `Em`, `Am`, `F#m`) e acordes com extensões atualizem o texto da badge do Tom perfeitamente ao clicar nos botões `-1 Semi` / `+1 Semi`.
+
+---
+
+## [1.9.3] - Correção do Hash BCrypt das Senhas Padrão dos Usuários Iniciais
+### Corrigido
+- **Autenticação dos Usuários Padrão**: Corrigido o hash de senha BCrypt gravado em [db/init.sql](file:///home/luis/dev/projetos/benApp/db/init.sql) e [db/schema_sqlite.sql](file:///home/luis/dev/projetos/benApp/db/schema_sqlite.sql) para a senha padrão `senha123` dos usuários `admin@celula.com` e `joao@celula.com`.
+- **Garantia de Usuário Inicial**: Adicionado o método `ensureDefaultUsers()` no [Config/Database.php](file:///home/luis/dev/projetos/benApp/Config/Database.php) que verifica e garante de forma idempotente que o usuário `admin@celula.com` exista no banco com a senha `senha123` pronta para login.
+
+---
+
+## [1.9.2] - Integração do .env com Docker Compose & Centralização de Scripts SQL
+### Adicionado / Otimizado
+- **Integração do `.env` com `docker-compose.yml`**: Atualizados os arquivos [.env](file:///home/luis/dev/projetos/benApp/.env), [.env.example](file:///home/luis/dev/projetos/benApp/.env.example) e [docker-compose.yml](file:///home/luis/dev/projetos/benApp/docker-compose.yml) para que o Docker Compose injete dinamicamente as credenciais da aplicação e do PostgreSQL diretamente a partir das variáveis de ambiente (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`).
+- **Centralização Estrita de Scripts SQL**: Removido o arquivo duplicado `database.sql` da raiz. Todos os scripts SQL da aplicação agora residem exclusivamente no diretório `db/` ([db/init.sql](file:///home/luis/dev/projetos/benApp/db/init.sql) e [db/schema_sqlite.sql](file:///home/luis/dev/projetos/benApp/db/schema_sqlite.sql)).
+
+---
+
+## [1.9.1] - Correção de Conexão PostgreSQL no Docker & DDL idempotente de Presenças
+### Corrigido
+- **Conectividade do Container com PostgreSQL**: Adicionadas variáveis de ambiente no [docker-compose.yml](file:///home/luis/dev/projetos/benApp/docker-compose.yml) (`DB_HOST=db`, `DB_USER=root`, `DB_PASS=rootpassword`) e mecanismo de *retry* com pausa no [Config/Database.php](file:///home/luis/dev/projetos/benApp/Config/Database.php), evitando queda prematura em *fallback* SQLite e o erro de `readonly database`.
+- **Migração da Coluna `codigo_acesso`**: Atualizados os scripts [db/init.sql](file:///home/luis/dev/projetos/benApp/db/init.sql) e [db/schema_sqlite.sql](file:///home/luis/dev/projetos/benApp/db/schema_sqlite.sql) com a coluna `codigo_acesso VARCHAR(20)`, e desacoplada a execução de migrações em [Models/Presenca.php](file:///home/luis/dev/projetos/benApp/Models/Presenca.php) para alteração de esquema idempotente e livre de erros.
+
+---
+
+## [1.9.0] - Acesso de Visitantes via Código de Convite
+### Adicionado / Otimizado
+- **Geração Automática de Código de Visitante**: Geração de códigos amigáveis de 6 caracteres (ex: `V8K2P9`) ao cadastrar visitantes em [Models/Presenca.php](file:///home/luis/dev/projetos/benApp/Models/Presenca.php).
+- **Controlador e Views de Visitante**: Implementado [Controllers/VisitanteController.php](file:///home/luis/dev/projetos/benApp/Controllers/VisitanteController.php) e a view [Views/auth/visitante.php](file:///home/luis/dev/projetos/benApp/Views/auth/visitante.php) para entrada por código via botão destacado em [Views/auth/login.php](file:///home/luis/dev/projetos/benApp/Views/auth/login.php).
+- **Middleware de Restrição Read-Only Multi-Tenant**: Atualização do roteamento em [public/index.php](file:///home/luis/dev/projetos/benApp/public/index.php) permitindo que o visitante acesse estritamente em modo de leitura a liturgia/escala da célula convidada.
+- **Badge do Código & Botão de Copiar**: Exibição do código do visitante e botão de cópia direta para a área de transferência em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php).
+- **Suíte de Testes Unitários**: Criado [tests/VisitanteControllerTest.php](file:///home/luis/dev/projetos/benApp/tests/VisitanteControllerTest.php) para validação do modelo e rotas de visitantes.
+
+---
+
 ## [1.8.0] - Correção no Docker Compose, Microserviço CifraClub API e Tablaturas (🎸 Tabs)
 ### Corrigido
 - **Case-Sensitivity no Docker Compose**: Ajustado o caminho de build do microserviço `cifraclub-api` no `docker-compose.yml` para `./Services/cifraclub-api` (com maiúscula), corrigindo falha de inicialização em sistemas Linux e permitindo o boot perfeito dos containers (`app`, `db` e `cifraclub-api`).

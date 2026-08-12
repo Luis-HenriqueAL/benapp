@@ -7,6 +7,7 @@ require_once __DIR__ . '/CelulaControllerTest.php';
 require_once __DIR__ . '/MomentoLiturgiaControllerTest.php';
 require_once __DIR__ . '/LiturgiaModelTest.php';
 require_once __DIR__ . '/EscalaModelTest.php';
+require_once __DIR__ . '/VisitanteControllerTest.php';
 
 $testClasses = [
     new EscalaControllerTest(),
@@ -14,7 +15,8 @@ $testClasses = [
     new CelulaControllerTest(),
     new MomentoLiturgiaControllerTest(),
     new LiturgiaModelTest(),
-    new EscalaModelTest()
+    new EscalaModelTest(),
+    new VisitanteControllerTest()
 ];
 
 $passed = 0;

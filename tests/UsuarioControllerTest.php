@@ -14,7 +14,7 @@ class UsuarioControllerTest extends TestCase {
     /**
      * Configura a sessão simulada com permissões para os testes.
      */
-    protected function setUp(): void {
+    public function setUp(): void {
         if (session_status() === PHP_SESSION_NONE) session_start();
         $_SESSION['user'] = ['id' => 1, 'nome' => 'Teste', 'perfil' => 'MEMBRO', 'celula_id' => 1];
         $_SESSION['celula_id'] = 1;

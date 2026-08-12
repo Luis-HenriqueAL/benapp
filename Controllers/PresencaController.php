@@ -18,6 +18,12 @@ class PresencaController {
      * Construtor do PresencaController.
      */
     public function __construct() {
+        if (isset($_SESSION['visitante']) && !isset($_SESSION['user'])) {
+            $_SESSION['flash_error'] = "Visitantes possuem acesso estritamente de leitura.";
+            $liturgia_id = (int)($_SESSION['visitante']['liturgia_id'] ?? 0);
+            header("Location: /escala/show?id={$liturgia_id}");
+            exit;
+        }
         $this->presencaModel = new Presenca();
     }
 

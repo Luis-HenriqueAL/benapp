@@ -58,6 +58,9 @@ class SecurityHelper {
      * @return bool Verdadeiro se o usuário tiver a permissão.
      */
     public static function hasPermissao($chave) {
+        if (isset($_SESSION['visitante']) && !isset($_SESSION['user'])) {
+            return $chave === 'escala.view';
+        }
         $perfil = $_SESSION['user']['perfil'] ?? '';
         if ($perfil === 'LIDER') return true;
         $permissoes = $_SESSION['permissoes'] ?? [];

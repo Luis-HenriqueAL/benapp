@@ -80,19 +80,21 @@ class Presenca {
                         nome_visitante VARCHAR(255) NULL,
                         qtd_visitas INT DEFAULT 1,
                         tipo VARCHAR(20) DEFAULT 'membro',
+                        registrado_por_id INT NULL,
+                        codigo_acesso VARCHAR(20) NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     );
                 ");
-                try { $this->conn->exec("ALTER TABLE presencas ALTER COLUMN usuario_id DROP NOT NULL;"); } catch (\PDOException $e) {}
             }
-
-            try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN nome_visitante VARCHAR(255);"); } catch (\PDOException $e) {}
-            try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN qtd_visitas INT DEFAULT 1;"); } catch (\PDOException $e) {}
-            try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN tipo VARCHAR(20) DEFAULT 'membro';"); } catch (\PDOException $e) {}
-            try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN registrado_por_id INT;"); } catch (\PDOException $e) {}
         } catch (\PDOException $e) {
-            // Ignora se tabela/colunas já existirem
+            // Ignora se tabela já existir
         }
+
+        try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN nome_visitante VARCHAR(255);"); } catch (\PDOException $e) {}
+        try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN qtd_visitas INT DEFAULT 1;"); } catch (\PDOException $e) {}
+        try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN tipo VARCHAR(20) DEFAULT 'membro';"); } catch (\PDOException $e) {}
+        try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN registrado_por_id INT;"); } catch (\PDOException $e) {}
+        try { $this->conn->exec("ALTER TABLE presencas ADD COLUMN codigo_acesso VARCHAR(20);"); } catch (\PDOException $e) {}
     }
 
     /**
@@ -218,16 +220,55 @@ class Presenca {
             throw new \Exception("O visitante '{$nomeVisitante}' já está confirmado neste encontro.");
         }
 
-        $query = "INSERT INTO {$this->table_name} (celula_id, liturgia_id, usuario_id, nome_visitante, qtd_visitas, tipo, registrado_por_id) 
-                  VALUES (:celula_id, :liturgia_id, NULL, :nome_visitante, :qtd_visitas, 'visitante', :registrado_por_id)";
+        $codigoAcesso = self::generateCodigoAcesso();
+        $query = "INSERT INTO {$this->table_name} (celula_id, liturgia_id, usuario_id, nome_visitante, qtd_visitas, tipo, registrado_por_id, codigo_acesso) 
+                  VALUES (:celula_id, :liturgia_id, NULL, :nome_visitante, :qtd_visitas, 'visitante', :registrado_por_id, :codigo_acesso)";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([
             ':celula_id'         => $celula_id,
             ':liturgia_id'       => $liturgia_id,
             ':nome_visitante'    => $nomeVisitante,
             ':qtd_visitas'       => max(1, (int)$qtdVisitas),
-            ':registrado_por_id' => $registrado_por_id
+            ':registrado_por_id' => $registrado_por_id,
+            ':codigo_acesso'     => $codigoAcesso
         ]);
+    }
+
+    /**
+     * Gera um código de acesso de visitante único de 6 caracteres alfanuméricos em caixa alta.
+     *
+     * @return string Código gerado (ex: V8K2P9).
+     */
+    public static function generateCodigoAcesso() {
+        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $code = 'V';
+        for ($i = 0; $i < 5; $i++) {
+            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $code;
+    }
+
+    /**
+     * Busca um registro de visitante pelo seu código de acesso.
+     *
+     * @param string $codigo Código de acesso do visitante.
+     * @return array|false Dados do registro de presença ou false se não encontrado.
+     */
+    public function findByCodigoAcesso($codigo) {
+        $codigo = strtoupper(trim($codigo));
+        if (empty($codigo)) return false;
+
+        $query = "
+            SELECT p.*, l.tema as liturgia_tema, l.data_culto, c.nome as celula_nome
+            FROM {$this->table_name} p
+            INNER JOIN liturgias l ON p.liturgia_id = l.id
+            LEFT JOIN celulas_info c ON p.celula_id = c.id
+            WHERE UPPER(TRIM(p.codigo_acesso)) = :codigo AND p.tipo = 'visitante'
+            LIMIT 1
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':codigo' => $codigo]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -295,6 +336,16 @@ class Presenca {
         ";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':celula_id' => $celula_id, ':liturgia_id' => $liturgia_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $presencas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($presencas as &$p) {
+            if ($p['tipo'] === 'visitante' && empty($p['codigo_acesso'])) {
+                $novoCodigo = self::generateCodigoAcesso();
+                $upd = $this->conn->prepare("UPDATE {$this->table_name} SET codigo_acesso = :code WHERE id = :id");
+                $upd->execute([':code' => $novoCodigo, ':id' => $p['id']]);
+                $p['codigo_acesso'] = $novoCodigo;
+            }
+        }
+        return $presencas;
     }
 }

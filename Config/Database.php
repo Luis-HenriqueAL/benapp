@@ -28,25 +28,31 @@ class Database {
             $dbNameEnv = getenv('DB_NAME') ?: 'benapp';
             $dbPortEnv = getenv('DB_PORT') ?: '5432';
 
-            $hosts = $dbHostEnv ? [$dbHostEnv] : ['127.0.0.1', 'localhost', 'db'];
-            $users = $dbUserEnv ? [$dbUserEnv] : ['postgres', 'root'];
+            $hosts = $dbHostEnv ? [$dbHostEnv, 'db', '127.0.0.1', 'localhost'] : ['db', '127.0.0.1', 'localhost'];
+            $users = $dbUserEnv ? [$dbUserEnv, 'root', 'postgres'] : ['root', 'postgres'];
 
-            foreach ($hosts as $host) {
-                foreach ($users as $user) {
-                    $pass = $dbPassEnv !== false ? $dbPassEnv : ($user === 'root' ? 'rootpassword' : 'postgres');
-                    try {
-                        $dsn = "pgsql:host=$host;port=$dbPortEnv;dbname=$dbNameEnv;";
-                        $options = [
-                            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                            PDO::ATTR_EMULATE_PREPARES   => false,
-                        ];
-                        self::$connection = new PDO($dsn, $user, $pass, $options);
-                        self::initializeDbIfEmpty(self::$connection, 'pgsql');
-                        return self::$connection;
-                    } catch (PDOException $e) {
-                        // Tenta a próxima combinação de host/usuário
+            // Tenta conectar ao PostgreSQL com até 3 tentativas de retry (para evitar corrida na inicialização do container)
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                foreach ($hosts as $host) {
+                    foreach ($users as $user) {
+                        $pass = $dbPassEnv !== false ? $dbPassEnv : ($user === 'root' ? 'rootpassword' : 'postgres');
+                        try {
+                            $dsn = "pgsql:host=$host;port=$dbPortEnv;dbname=$dbNameEnv;";
+                            $options = [
+                                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                                PDO::ATTR_EMULATE_PREPARES   => false,
+                            ];
+                            self::$connection = new PDO($dsn, $user, $pass, $options);
+                            self::initializeDbIfEmpty(self::$connection, 'pgsql');
+                            return self::$connection;
+                        } catch (PDOException $e) {
+                            // Tenta a próxima combinação de host/usuário
+                        }
                     }
+                }
+                if ($attempt < 3) {
+                    sleep(1);
                 }
             }
 
@@ -55,7 +61,11 @@ class Database {
             if (!is_dir($sqliteDir)) {
                 @mkdir($sqliteDir, 0777, true);
             }
+            @chmod($sqliteDir, 0777);
             $sqlitePath = $sqliteDir . '/benapp.sqlite';
+            if (file_exists($sqlitePath)) {
+                @chmod($sqlitePath, 0666);
+            }
             $dsn = "sqlite:" . $sqlitePath;
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -93,8 +103,34 @@ class Database {
                     }
                 }
             }
+            self::ensureDefaultUsers($conn);
         } catch (\Exception $e) {
             // Ignora erro se tabelas já existirem
+        }
+    }
+
+    /**
+     * Garante que o usuário inicial admin@celula.com exista com a senha padrão 'senha123' válida.
+     *
+     * @param PDO $conn Conexão PDO ativa.
+     * @return void
+     */
+    private static function ensureDefaultUsers(PDO $conn) {
+        try {
+            $defaultHash = '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q';
+            $stmt = $conn->prepare("SELECT id, senha FROM usuarios WHERE email = :email");
+            $stmt->execute([':email' => 'admin@celula.com']);
+            $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$admin) {
+                $ins = $conn->prepare("INSERT INTO usuarios (celula_id, nome, email, senha, perfil, status) VALUES (1, 'Líder Principal', 'admin@celula.com', :senha, 'LIDER', 'ativo')");
+                $ins->execute([':senha' => $defaultHash]);
+            } else if (empty($admin['senha']) || !password_verify('senha123', $admin['senha'])) {
+                $upd = $conn->prepare("UPDATE usuarios SET senha = :senha WHERE id = :id");
+                $upd->execute([':senha' => $defaultHash, ':id' => $admin['id']]);
+            }
+        } catch (\Exception $e) {
+            // Ignora exceções se tabela ainda não for válida
         }
     }
 }

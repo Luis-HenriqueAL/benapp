@@ -6,7 +6,12 @@ services:
     volumes:
       - .:/var/www/html
     environment:
-      - CIFRACLUB_API_URL=http://cifraclub-api:3000
+      - CIFRACLUB_API_URL=${CIFRACLUB_API_URL:-http://cifraclub-api:3000}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASS=${DB_PASS:-rootpassword}
+      - DB_NAME=${DB_NAME:-benapp}
+      - DB_PORT=${DB_PORT:-5432}
     depends_on:
       - db
       - cifraclub-api
@@ -14,11 +19,11 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: benapp
+      POSTGRES_USER: ${DB_USER:-root}
+      POSTGRES_PASSWORD: ${DB_PASS:-rootpassword}
+      POSTGRES_DB: ${DB_NAME:-benapp}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 

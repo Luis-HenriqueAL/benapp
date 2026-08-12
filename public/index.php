@@ -58,15 +58,47 @@ if ($uri === '/logout') {
     exit;
 }
 
-// Middleware de Proteção de Autenticação
-if (!isset($_SESSION['user'])) {
+if ($uri === '/visitante') {
+    $controller = new \Controllers\VisitanteController();
+    $controller->index();
+    exit;
+}
+
+if ($uri === '/visitante/acessar') {
+    $controller = new \Controllers\VisitanteController();
+    $controller->acessar();
+    exit;
+}
+
+if ($uri === '/visitante/sair') {
+    $controller = new \Controllers\VisitanteController();
+    $controller->sair();
+    exit;
+}
+
+// Middleware de Proteção de Autenticação (Membro/Líder ou Visitante)
+if (!isset($_SESSION['user']) && !isset($_SESSION['visitante'])) {
     header("Location: /login");
     exit;
 }
 
+// Middleware de Restrição para Visitantes (Somente Leitura da Liturgia/Escala)
+if (isset($_SESSION['visitante']) && !isset($_SESSION['user'])) {
+    $allowedVisitorRoutes = ['/escala/show', '/escala', '/', '', '/cifra', '/musica/cifra', '/escala/cifra'];
+    if (!in_array($uri, $allowedVisitorRoutes) && !preg_match('/^\/escala\/\d+$/', $uri)) {
+        $targetLiturgiaId = (int)($_SESSION['visitante']['liturgia_id'] ?? 0);
+        header("Location: /escala/show?id=" . $targetLiturgiaId);
+        exit;
+    }
+}
+
 // Middleware de Tenant
 if (!isset($_SESSION['celula_id'])) {
-    $_SESSION['celula_id'] = $_SESSION['user']['celula_id'] ?? 1;
+    if (isset($_SESSION['visitante']['celula_id'])) {
+        $_SESSION['celula_id'] = (int)$_SESSION['visitante']['celula_id'];
+    } else {
+        $_SESSION['celula_id'] = $_SESSION['user']['celula_id'] ?? 1;
+    }
 }
 
 // Rotas Protegidas

@@ -88,7 +88,13 @@ unset($_SESSION['flash_error']);
                 </button>
             </form>
 
-            <div class="mt-6 text-center border-t border-slate-100 pt-4">
+            <div class="mt-4 pt-4 border-t border-slate-100 text-center">
+                <a href="/visitante" class="w-full flex items-center justify-center space-x-2 bg-purple-50 hover:bg-purple-100 active:scale-98 text-purple-700 font-extrabold py-3.5 px-5 rounded-2xl border border-purple-200/80 transition-all text-xs tracking-wide shadow-xs">
+                    <span>🎟️ Sou Visitante (Acessar com Código)</span>
+                </a>
+            </div>
+
+            <div class="mt-4 text-center">
                 <p class="text-[11px] font-medium text-slate-400">Credenciais de teste:</p>
                 <p class="text-xs font-bold text-blue-600 mt-0.5">E-mail: admin@celula.com | Senha: senha123</p>
             </div>

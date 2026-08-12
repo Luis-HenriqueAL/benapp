@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS presencas (
     qtd_visitas INT DEFAULT 1,
     tipo VARCHAR(20) DEFAULT 'membro',
     registrado_por_id INT NULL,
+    codigo_acesso VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -109,4 +110,4 @@ CREATE TABLE IF NOT EXISTS liturgia_musicas (
 
 -- Seeds Iniciais
 INSERT OR IGNORE INTO usuarios (celula_id, nome, email, senha, perfil)
-VALUES (1, 'Líder Principal', 'admin@celula.com', '$2y$10$w8T06sLq7vWwJmJ5c4wMLeM9wK0y1A8Cq1g/WqH.gWf2gN8kYtBie', 'LIDER');
+VALUES (1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER');

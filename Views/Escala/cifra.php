@@ -411,7 +411,7 @@ $musicaInicialJson = (int) ($musicaInicial ?? 0);
 
         const original = preElem.getAttribute('data-original-text') || '';
         const origTom = tomElem ? (tomElem.getAttribute('data-original-tom') || 'C') : 'C';
-        if (tomElem) tomElem.textContent = transposeNote(origTom, offset);
+        if (tomElem) tomElem.textContent = transposeChordToken(origTom, offset);
 
         const lines = original.split('\n');
         const chordTokenRe = /[A-G][#b]?(m|maj|min|dim|aug|sus|add|M|[0-9]|\+|\-|\(|\))*(\/[A-G][#b]?)?/g;
