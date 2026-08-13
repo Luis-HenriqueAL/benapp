@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS perfis (
 CREATE TABLE IF NOT EXISTS perfil_permissoes (
     id SERIAL PRIMARY KEY,
     perfil_id INT NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
-    permissao VARCHAR(100) NOT NULL,
-    CONSTRAINT uq_perfil_permissao UNIQUE (perfil_id, permissao)
+    chave_permissao VARCHAR(100) NOT NULL,
+    CONSTRAINT uq_perfil_permissao UNIQUE (perfil_id, chave_permissao)
 );
 
 CREATE TABLE IF NOT EXISTS liturgias (

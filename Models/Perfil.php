@@ -53,7 +53,7 @@ class Perfil {
         $id = $stmt->fetchColumn();
 
         if (!$id) {
-            $stmtInsert = $this->conn->prepare("INSERT INTO {$this->table_name} (celula_id, nome, descricao) VALUES (:celula_id, 'MEMBRO', 'Perfil nativo de membro da célula')");
+            $stmtInsert = $this->conn->prepare("INSERT INTO {$this->table_name} (celula_id, nome, slug, descricao) VALUES (:celula_id, 'MEMBRO', 'membro', 'Perfil nativo de membro da célula')");
             $stmtInsert->execute([':celula_id' => $celula_id]);
             $id = $this->conn->lastInsertId();
             $this->syncPermissoes($id, ['escala.view']);
@@ -113,11 +113,13 @@ class Perfil {
      * @return int ID do perfil criado.
      */
     public function create($celula_id, $nome, $descricao, array $permissoes = []) {
-        $query = "INSERT INTO {$this->table_name} (celula_id, nome, descricao) VALUES (:celula_id, :nome, :descricao)";
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $nome))) ?: 'perfil-' . time();
+        $query = "INSERT INTO {$this->table_name} (celula_id, nome, slug, descricao) VALUES (:celula_id, :nome, :slug, :descricao)";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
             ':celula_id' => $celula_id,
             ':nome'      => $nome,
+            ':slug'      => $slug,
             ':descricao' => $descricao,
         ]);
 
@@ -138,12 +140,14 @@ class Perfil {
      * @return bool Retorna verdadeiro se atualizado.
      */
     public function update($celula_id, $id, $nome, $descricao, array $permissoes = []) {
-        $query = "UPDATE {$this->table_name} SET nome = :nome, descricao = :descricao WHERE id = :id AND celula_id = :celula_id";
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $nome))) ?: 'perfil-' . time();
+        $query = "UPDATE {$this->table_name} SET nome = :nome, slug = :slug, descricao = :descricao WHERE id = :id AND celula_id = :celula_id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
             ':id'        => $id,
             ':celula_id' => $celula_id,
             ':nome'      => $nome,
+            ':slug'      => $slug,
             ':descricao' => $descricao,
         ]);
 
@@ -178,10 +182,22 @@ class Perfil {
      * @return array Lista de chaves de permissão (ex: ['escala.view', 'escala.create']).
      */
     public function getPermissoesByPerfilId($perfil_id) {
-        $query = "SELECT chave_permissao FROM perfil_permissoes WHERE perfil_id = :perfil_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':perfil_id' => $perfil_id]);
-        return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+        try {
+            $query = "SELECT chave_permissao FROM perfil_permissoes WHERE perfil_id = :perfil_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':perfil_id' => $perfil_id]);
+            $res = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+            if (!empty($res)) return $res;
+        } catch (\PDOException $e) {}
+
+        try {
+            $query = "SELECT permissao FROM perfil_permissoes WHERE perfil_id = :perfil_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':perfil_id' => $perfil_id]);
+            return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'permissao');
+        } catch (\PDOException $e) {
+            return [];
+        }
     }
 
     /**
@@ -199,21 +215,37 @@ class Perfil {
 
         $this->ensureMembroPerfil($celula_id);
 
-        $query = "
-            SELECT pp.chave_permissao 
-            FROM perfil_permissoes pp
-            INNER JOIN {$this->table_name} p ON pp.perfil_id = p.id
-            WHERE p.celula_id = :celula_id AND UPPER(p.nome) = UPPER(:nome)
-        ";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':celula_id' => $celula_id, ':nome' => $nomePerfil]);
-        $perms = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+        try {
+            $query = "
+                SELECT pp.chave_permissao 
+                FROM perfil_permissoes pp
+                INNER JOIN {$this->table_name} p ON pp.perfil_id = p.id
+                WHERE p.celula_id = :celula_id AND UPPER(p.nome) = UPPER(:nome)
+            ";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':celula_id' => $celula_id, ':nome' => $nomePerfil]);
+            $perms = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'chave_permissao');
+            if (!empty($perms)) return $perms;
+        } catch (\PDOException $e) {}
 
-        if (empty($perms) && strtoupper($nomePerfil) === 'MEMBRO') {
+        try {
+            $query = "
+                SELECT pp.permissao 
+                FROM perfil_permissoes pp
+                INNER JOIN {$this->table_name} p ON pp.perfil_id = p.id
+                WHERE p.celula_id = :celula_id AND UPPER(p.nome) = UPPER(:nome)
+            ";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':celula_id' => $celula_id, ':nome' => $nomePerfil]);
+            $perms = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'permissao');
+            if (!empty($perms)) return $perms;
+        } catch (\PDOException $e) {}
+
+        if (strtoupper($nomePerfil) === 'MEMBRO') {
             return ['escala.view'];
         }
 
-        return $perms;
+        return [];
     }
 
     /**
@@ -228,12 +260,23 @@ class Perfil {
             ->execute([':perfil_id' => $perfil_id]);
 
         $validas = array_keys(self::$permissoesDisponiveis);
-        $stmt = $this->conn->prepare("INSERT INTO perfil_permissoes (perfil_id, chave_permissao) VALUES (:perfil_id, :chave)");
 
-        foreach ($permissoes as $chave) {
-            if (in_array($chave, $validas, true)) {
-                $stmt->execute([':perfil_id' => $perfil_id, ':chave' => $chave]);
+        try {
+            $stmt = $this->conn->prepare("INSERT INTO perfil_permissoes (perfil_id, chave_permissao) VALUES (:perfil_id, :chave)");
+            foreach ($permissoes as $chave) {
+                if (in_array($chave, $validas, true)) {
+                    $stmt->execute([':perfil_id' => $perfil_id, ':chave' => $chave]);
+                }
             }
+        } catch (\PDOException $e) {
+            try {
+                $stmt = $this->conn->prepare("INSERT INTO perfil_permissoes (perfil_id, permissao) VALUES (:perfil_id, :chave)");
+                foreach ($permissoes as $chave) {
+                    if (in_array($chave, $validas, true)) {
+                        $stmt->execute([':perfil_id' => $perfil_id, ':chave' => $chave]);
+                    }
+                }
+            } catch (\PDOException $ex) {}
         }
     }
 }
