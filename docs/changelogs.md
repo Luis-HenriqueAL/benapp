@@ -2,6 +2,14 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [2.1.0] - Visualização de Endereço da Célula em Mapa Interativo (OpenStreetMap)
+### Adicionado
+- **Modal de Mapa Interativo OpenStreetMap**: Implementado clique interativo no endereço da célula em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php), abrindo modal responsivo com mapa embarcado via Leaflet.js e OpenStreetMap.
+- **Geocodificação Automática via Nominatim API**: Integração cliente com a API pública do Nominatim para identificar latitude e longitude do logradouro/bairro/cidade com fallback gracioso.
+- **Ações de Navegação Externa**: Adicionados botões no modal para copiar o endereço formatado e abrir diretamente a rota no OpenStreetMap ou no Google Maps.
+
+---
+
 ## [2.0.0] - Documentação Oficial do Repositório (README.md) e Publicação no GitHub
 ### Adicionado / Otimizado
 - **README.md Profissional**: Elaboração completa do arquivo [README.md](file:///home/luis/dev/projetos/benApp/README.md) com badges de tecnologias (PHP 8.2, PostgreSQL, Docker, Tailwind CSS, Python Flask), arquitetura do projeto, instruções detalhadas de inicialização via Docker Compose, tabela de credenciais padrão de demonstração, lista completa de funcionalidades (acesso de visitante por código, transposição cromática, cifras, autorolagem, multi-tenant) e comandos para testes.

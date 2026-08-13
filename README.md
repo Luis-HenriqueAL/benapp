@@ -37,7 +37,11 @@
 - **Portal do Convidado**: Tela de acesso dedicada em `/visitante` onde o visitante digita seu código e visualiza a programação e cifras do encontro.
 - **Experiência Limpa & Segura**: Interface restrita estritamente para leitura, ocultando botões de edição ou confirmação de presenças.
 
-### 🙋‍♂️ 5. Confirmação de Presenças & Recorrência
+### 🗺️ 5. Mapa Interativo com OpenStreetMap
+- **Clique no Endereço**: Ao clicar no endereço no topo da escala, é exibido um modal responsivo com mapa interativo do **OpenStreetMap** (via Leaflet.js).
+- **Geocodificação Automática**: Identificação automática de coordenadas via API Nominatim, botão de copiar endereço e atalhos para navegação externa.
+
+### 🙋‍♂️ 6. Confirmação de Presenças & Recorrência
 - Botão rápido *"Eu Vou"* para confirmação individual de voluntários.
 - Acompanhamento do histórico de frequência e contagem de visitas acumuladas (1ª visita, 2ª visita, etc.).
 
