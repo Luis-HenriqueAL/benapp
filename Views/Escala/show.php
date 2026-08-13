@@ -18,8 +18,30 @@ $tema = !empty($liturgia['tema']) ? $liturgia['tema'] : 'Encontro de Célula';
 $atribuicoes = $liturgia['atribuicoes'] ?? [];
 
 $nomeCelula = !empty($celulaInfo['nome']) ? $celulaInfo['nome'] : (!empty($celulaInfo['nome_celula']) ? $celulaInfo['nome_celula'] : 'Célula Boas Novas');
-$horarioCelula = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'], 0, 5) : '19:30';
+$horarioCelula = !empty($celulaInfo['horario']) ? substr($celulaInfo['horario'], 0, 5) : '';
 $isVisitorMode = isset($_SESSION['visitante']) && !isset($_SESSION['user']);
+
+$lideresNomes = [];
+if (!empty($celulaInfo['lideres']) && is_array($celulaInfo['lideres'])) {
+    foreach ($celulaInfo['lideres'] as $lid) {
+        $n = trim($lid['nome'] ?? '');
+        if ($n !== '') {
+            $lideresNomes[] = SecurityHelper::e($n);
+        }
+    }
+}
+$strLideres = implode(', ', $lideresNomes);
+
+$anfitrioesNomes = [];
+if (!empty($celulaInfo['anfitrioes']) && is_array($celulaInfo['anfitrioes'])) {
+    foreach ($celulaInfo['anfitrioes'] as $anf) {
+        $n = trim($anf['nome'] ?? '');
+        if ($n !== '') {
+            $anfitrioesNomes[] = SecurityHelper::e($n);
+        }
+    }
+}
+$strAnfitrioes = implode(', ', $anfitrioesNomes);
 
 ob_start();
 ?>
@@ -117,6 +139,16 @@ ob_start();
             <p class="text-xs text-blue-100 font-medium mt-1">Célula: <strong>
                     <?= SecurityHelper::e($nomeCelula) ?>
                 </strong></p>
+            <?php if (!empty($strLideres)): ?>
+                <p class="text-xs text-blue-100/90 font-medium mt-0.5">Líder(es): <strong class="text-white">
+                        <?= $strLideres ?>
+                    </strong></p>
+            <?php endif; ?>
+            <?php if (!empty($strAnfitrioes)): ?>
+                <p class="text-xs text-blue-100/90 font-medium mt-0.5">Anfitrião(ões): <strong class="text-white">
+                        <?= $strAnfitrioes ?>
+                    </strong></p>
+            <?php endif; ?>
         </div>
 
         <?php if (!empty($celulaInfo['logradouro'])): ?>

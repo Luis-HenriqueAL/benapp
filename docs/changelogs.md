@@ -2,6 +2,12 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [2.1.1] - Exibição dos Nomes de Líderes e Anfitriões no Detalhe da Escala
+### Adicionado
+- **Líderes e Anfitriões na Escala**: Incluída a renderização dinâmica dos nomes dos Líderes e Anfitriões cadastrados na célula logo abaixo do nome da célula em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php).
+
+---
+
 ## [2.1.0] - Visualização de Endereço da Célula em Mapa Interativo (OpenStreetMap)
 ### Adicionado
 - **Modal de Mapa Interativo OpenStreetMap**: Implementado clique interativo no endereço da célula em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php), abrindo modal responsivo com mapa embarcado via Leaflet.js e OpenStreetMap.

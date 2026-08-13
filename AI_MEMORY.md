@@ -38,6 +38,7 @@ Sistema de Gestão de Células (benApp).
 
 ## Status Atual
 - **Concluído**:
+  - Exibição de Líderes e Anfitriões na Escala: Atualizado o cabeçalho do evento em `Views/Escala/show.php` para exibir dinamicamente os nomes dos Líder(es) e Anfitrião(ões) cadastrados na célula logo abaixo do nome da Célula.
   - Visualização de Endereço em Mapa Interativo (OpenStreetMap & Leaflet.js): Adicionado clique interativo no endereço da célula em `Views/Escala/show.php` abrindo modal responsivo com geocodificação via Nominatim API, mapa interativo Leaflet.js (OpenStreetMap), botão de copiar endereço e links de navegação externa para OpenStreetMap e Google Maps.
   - Elaboração e Criação do `README.md` Oficial: Criado o arquivo [README.md](file:///home/luis/dev/projetos/benApp/README.md) completo e formatado com badges de tecnologia, arquitetura de microserviços, guia rápido de execução via Docker Compose, credenciais padrão de demonstração, lista de funcionalidades (visitante, transposição, cifras, multi-tenant) e mapa de diretórios.
   - Ocultação de Botões de Confirmação para Visitantes: Ocultados os botões "Eu Vou", "Confirmar Membro" e "Novo Visitante" na view `Views/Escala/show.php` e adicionada trava de segurança em `PresencaController.php` bloqueando ações de modificação para sessões de visitantes.
