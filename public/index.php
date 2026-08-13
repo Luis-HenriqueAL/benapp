@@ -36,7 +36,13 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = str_replace('/public', '', $uri);
 
-// Ignora ativos estáticos e favicon para não gerar erro ou redirecionamento em segundo plano
+if ($uri === '/favicon.ico') {
+    header('Content-Type: image/svg+xml');
+    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⛪</text></svg>';
+    exit;
+}
+
+// Ignora ativos estáticos para não gerar redirecionamento em segundo plano
 if (preg_match('/\.(ico|png|jpg|jpeg|svg|css|js|map|woff|woff2|ttf)$/i', $uri)) {
     http_response_code(404);
     exit;

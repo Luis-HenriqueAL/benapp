@@ -24,6 +24,7 @@ $currentUri = str_replace('/public', '', $currentUri);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BenApp - Gestão de Células</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
