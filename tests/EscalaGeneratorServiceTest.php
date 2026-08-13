@@ -40,4 +40,27 @@ class EscalaGeneratorServiceTest {
             throw new \Exception("Momento de Palavra deve ser atribuído ao Líder Principal.");
         }
     }
+
+    public function testGerarAtribuicoesComApenasTitulosSemFlagsDoFrontend() {
+        $celula_id = 1;
+        $momentos = [
+            ['idx' => 0, 'titulo' => 'Quebra-Gelo / Recepção'],
+            ['idx' => 1, 'titulo' => 'Louvor e Adoração'],
+            ['idx' => 2, 'titulo' => 'Estudo / Palavra'],
+            ['idx' => 3, 'titulo' => 'Oração e Avisos']
+        ];
+
+        $result = $this->service->gerarAtribuicoes($celula_id, $momentos);
+
+        $liderPrincipal = $this->usuarioModel->findLiderPrincipalByCelula($celula_id);
+        $liderId = (int)$liderPrincipal['id'];
+
+        if ((int)$result[1]['usuario_id'] !== $liderId) {
+            throw new \Exception("Momento 'Louvor e Adoração' deve ser atribuído ao Líder Principal.");
+        }
+
+        if ((int)$result[2]['usuario_id'] !== $liderId) {
+            throw new \Exception("Momento 'Estudo / Palavra' deve ser atribuído ao Líder Principal.");
+        }
+    }
 }

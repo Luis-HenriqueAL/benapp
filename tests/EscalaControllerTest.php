@@ -66,6 +66,22 @@ class EscalaControllerTest extends TestCase {
         $controller->store($celula_id, $data);
     }
 
+    public function testStoreThrowsExceptionOnPastDate() {
+        $celula_id = 1;
+        $data = [
+            'evento' => 'Culto Passado',
+            'data' => '2020-01-01',
+            'hora' => '19:00'
+        ];
+        
+        $controller = new EscalaController();
+        
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Não é possível criar eventos para datas anteriores a hoje');
+        
+        $controller->store($celula_id, $data);
+    }
+
     public function testStoreSuccessfulFormSubmission() {
         $celula_id = 1;
         $data = [

@@ -140,6 +140,7 @@ class EscalaController {
         $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
         $momentosPredefinidos = $this->escalaModel->getMomentosPredefinidos($celula_id);
         $voluntarios = $this->usuarioModel->findByCelula($celula_id);
+        $datasExistentes = $this->liturgiaModel->getDatasCultoExistentes($celula_id);
 
         require_once __DIR__ . '/../Views/Escala/create.php';
     }
@@ -198,6 +199,20 @@ class EscalaController {
         }
         if (empty($dataCulto)) {
             throw new \Exception("A data do culto é obrigatória.");
+        }
+
+        // Validação 1: Bloqueia criação em datas retroativas (anteriores a hoje)
+        $today = date('Y-m-d');
+        if ($dataCulto < $today) {
+            $dataFmt = date('d/m/Y', strtotime($dataCulto));
+            throw new \Exception("Não é possível criar eventos para datas anteriores a hoje ({$dataFmt}).");
+        }
+
+        // Validação 2: Bloqueia criação em datas já cadastradas
+        $existente = $this->liturgiaModel->findByDataCulto($celula_id, $dataCulto);
+        if ($existente) {
+            $dataFmt = date('d/m/Y', strtotime($dataCulto));
+            throw new \Exception("Já existe um evento cadastrado para a data {$dataFmt}. Escolha outra data.");
         }
 
         $evento = !empty($data['evento']) ? trim($data['evento']) : "Encontro de Célula - {$nomeDefault}";
@@ -263,7 +278,7 @@ class EscalaController {
     }
 
     /**
-     * Exibe a tela de edição de uma escala/liturgia existente.
+     * Exibe o formulário de edição de uma liturgia/escala existente.
      *
      * @return void
      */
@@ -276,7 +291,12 @@ class EscalaController {
         $celula_id = $_SESSION['celula_id'] ?? 1;
         $id = (int)($_GET['id'] ?? 0);
 
-        $liturgia = $this->escalaModel->getLiturgiaDetails($celula_id, $id);
+        if (!$id) {
+            header("Location: /escala");
+            exit;
+        }
+
+        $liturgia = $this->liturgiaModel->findById($celula_id, $id);
         if (!$liturgia) {
             $_SESSION['flash_error'] = "Escala não encontrada.";
             header("Location: /escala");
@@ -286,6 +306,7 @@ class EscalaController {
         $celulaInfo = $this->celulaModel->findByCelulaId($celula_id);
         $momentosPredefinidos = $this->escalaModel->getMomentosPredefinidos($celula_id);
         $voluntarios = $this->usuarioModel->findByCelula($celula_id);
+        $datasExistentes = $this->liturgiaModel->getDatasCultoExistentes($celula_id, $id);
 
         require_once __DIR__ . '/../Views/Escala/edit.php';
     }
@@ -310,7 +331,7 @@ class EscalaController {
 
         $liturgiaAtual = $this->liturgiaModel->findById($celula_id, $liturgiaId);
         if (!$liturgiaAtual) {
-            throw new \Exception("Liturgia não encontrada ou não pertence a esta célula.");
+            throw new \Exception("Liturgia não encontrada ou não pertence à sua célula.");
         }
 
         $dataCulto = isset($data['data']) ? trim($data['data']) : '';
@@ -322,6 +343,20 @@ class EscalaController {
         }
         if (empty($dataCulto)) {
             throw new \Exception("A data do culto é obrigatória.");
+        }
+
+        // Validação 1: Bloqueia alteração para datas retroativas (anteriores a hoje)
+        $today = date('Y-m-d');
+        if ($dataCulto < $today) {
+            $dataFmt = date('d/m/Y', strtotime($dataCulto));
+            throw new \Exception("Não é possível alterar o evento para uma data anterior a hoje ({$dataFmt}).");
+        }
+
+        // Validação 2: Bloqueia alteração para data em que outro evento já existe
+        $existente = $this->liturgiaModel->findByDataCulto($celula_id, $dataCulto, $liturgiaId);
+        if ($existente) {
+            $dataFmt = date('d/m/Y', strtotime($dataCulto));
+            throw new \Exception("Já existe outro evento cadastrado para a data {$dataFmt}. Escolha outra data.");
         }
 
         $evento = trim($data['evento']);
@@ -356,35 +391,46 @@ class EscalaController {
      * @return void
      */
     public function gerarAutomatica() {
-        header('Content-Type: application/json');
+        if (ob_get_length()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
 
-        if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
-            echo json_encode(['success' => false, 'message' => 'Sem permissão para gerar escala.']);
+        try {
+            if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
+                echo json_encode(['success' => false, 'message' => 'Sem permissão para gerar escala.']);
+                exit;
+            }
+
+            $celula_id = $_SESSION['celula_id'] ?? 1;
+
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true);
+
+            if (!$data || empty($data['momentos'])) {
+                $data = $_POST;
+            }
+
+            $momentos = $data['momentos'] ?? [];
+
+            if (empty($momentos)) {
+                $momentos = $this->escalaModel->getMomentosPredefinidos($celula_id);
+            }
+
+            $generator = new \Services\EscalaGeneratorService();
+            $atribuicoes = $generator->gerarAtribuicoes($celula_id, $momentos);
+
+            echo json_encode([
+                'success' => true,
+                'atribuicoes' => $atribuicoes
+            ]);
+            exit;
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => \Helpers\SecurityHelper::formatUserErrorMessage($e)
+            ]);
             exit;
         }
-
-        $celula_id = $_SESSION['celula_id'] ?? 1;
-
-        $rawInput = file_get_contents('php://input');
-        $data = json_decode($rawInput, true);
-
-        if (!$data || empty($data['momentos'])) {
-            $data = $_POST;
-        }
-
-        $momentos = $data['momentos'] ?? [];
-
-        if (empty($momentos)) {
-            $momentos = $this->escalaModel->getMomentosPredefinidos($celula_id);
-        }
-
-        $generator = new \Services\EscalaGeneratorService();
-        $atribuicoes = $generator->gerarAtribuicoes($celula_id, $momentos);
-
-        echo json_encode([
-            'success' => true,
-            'atribuicoes' => $atribuicoes
-        ]);
-        exit;
     }
 }

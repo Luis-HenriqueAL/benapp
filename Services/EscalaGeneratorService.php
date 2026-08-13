@@ -46,6 +46,20 @@ class EscalaGeneratorService {
         $liderPrincipal = $this->usuarioModel->findLiderPrincipalByCelula($celula_id);
         $liderPrincipalId = $liderPrincipal ? (int)$liderPrincipal['id'] : (int)$voluntariosAtivos[0]['id'];
 
+        // Busca flags de momentos predefinidos cadastrados no banco
+        $stmtMom = $this->conn->prepare("SELECT titulo, is_louvor, is_palavra FROM momentos_predefinidos WHERE celula_id = :celula_id");
+        $stmtMom->execute([':celula_id' => $celula_id]);
+        $dbMomentos = $stmtMom->fetchAll(PDO::FETCH_ASSOC);
+
+        $momentoFlagsMap = [];
+        foreach ($dbMomentos as $dbm) {
+            $tKey = mb_strtolower(trim($dbm['titulo']));
+            $momentoFlagsMap[$tKey] = [
+                'is_louvor' => !empty($dbm['is_louvor']),
+                'is_palavra' => !empty($dbm['is_palavra']),
+            ];
+        }
+
         // Coleta histórico de escalados recentemente para rotação
         $historicoEscalas = $this->obterHistoricoRecente($celula_id);
 
@@ -60,20 +74,27 @@ class EscalaGeneratorService {
 
         foreach ($momentos as $idx => $momento) {
             $titulo = is_array($momento) ? ($momento['titulo'] ?? '') : (string)$momento;
+            $tituloTrim = trim($titulo);
+            $tKey = mb_strtolower($tituloTrim);
+
             $isLouvor = is_array($momento) ? (!empty($momento['is_louvor']) || !empty($momento['isLouvor'])) : false;
             $isPalavra = is_array($momento) ? (!empty($momento['is_palavra']) || !empty($momento['isPalavra'])) : false;
 
-            $tituloLower = mb_strtolower($titulo);
-            if (!$isLouvor && (strpos($tituloLower, 'louvor') !== false || strpos($tituloLower, 'música') !== false || strpos($tituloLower, 'adoracao') !== false || strpos($tituloLower, 'adoração') !== false)) {
+            if (isset($momentoFlagsMap[$tKey])) {
+                if ($momentoFlagsMap[$tKey]['is_louvor']) $isLouvor = true;
+                if ($momentoFlagsMap[$tKey]['is_palavra']) $isPalavra = true;
+            }
+
+            if (!$isLouvor && (strpos($tKey, 'louvor') !== false || strpos($tKey, 'música') !== false || strpos($tKey, 'musica') !== false || strpos($tKey, 'adoracao') !== false || strpos($tKey, 'adoração') !== false || strpos($tKey, 'cifra') !== false)) {
                 $isLouvor = true;
             }
-            if (!$isPalavra && (strpos($tituloLower, 'palavra') !== false || strpos($tituloLower, 'estudo') !== false || strpos($tituloLower, 'pregação') !== false || strpos($tituloLower, 'pregacao') !== false)) {
+            if (!$isPalavra && (strpos($tKey, 'palavra') !== false || strpos($tKey, 'estudo') !== false || strpos($tKey, 'pregação') !== false || strpos($tKey, 'pregacao') !== false || strpos($tKey, 'mensagem') !== false || strpos($tKey, 'bíblia') !== false || strpos($tKey, 'biblia') !== false)) {
                 $isPalavra = true;
             }
 
             $usuarioSorteadoId = null;
 
-            // Louvor e Palavra -> Líder Principal
+            // Louvor e Palavra -> Líder Principal obrigatoriamente
             if ($isLouvor || $isPalavra) {
                 $usuarioSorteadoId = $liderPrincipalId;
             } else {
@@ -89,13 +110,12 @@ class EscalaGeneratorService {
                     $candidatos = $voluntariosAtivos;
                 }
 
+                // Embaralha inicialmente para desempate aleatório entre membros com a mesma contagem de escala
+                shuffle($candidatos);
+
                 usort($candidatos, function($a, $b) use ($contagemRecente) {
                     $cntA = $contagemRecente[(int)$a['id']] ?? 0;
                     $cntB = $contagemRecente[(int)$b['id']] ?? 0;
-
-                    if ($cntA === $cntB) {
-                        return rand(-1, 1);
-                    }
                     return $cntA <=> $cntB;
                 });
 

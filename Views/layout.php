@@ -230,6 +230,20 @@ $currentUri = str_replace('/public', '', $currentUri);
         </div>
     </div>
 
+    <!-- Modal de Alerta Customizado (substitui alert() nativo) -->
+    <div id="globalAlertModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-200">
+        <div id="globalAlertModalBox" class="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl border border-slate-100 text-center transform scale-95 transition-transform duration-200">
+            <div id="globalAlertIconContainer" class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-blue-100">
+                <span id="globalAlertIcon" class="text-2xl">ℹ️</span>
+            </div>
+            <h3 id="globalAlertTitle" class="text-base font-extrabold text-slate-900 mb-1.5">Aviso do Sistema</h3>
+            <p id="globalAlertMessage" class="text-xs font-semibold text-slate-600 mb-5 leading-relaxed"></p>
+            <button onclick="closeGlobalAlertModal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-md shadow-blue-500/20 transition-all text-xs tracking-wide">
+                Entendido
+            </button>
+        </div>
+    </div>
+
     <!-- Container Principal de Conteúdo -->
     <main class="flex-1 px-4 -mt-8 pb-28 relative z-20 max-w-md mx-auto w-full">
         <?= $content ?? '' ?>
@@ -314,6 +328,50 @@ $currentUri = str_replace('/public', '', $currentUri);
                 });
             });
         });
+
+        // === Modal de Alerta Global (substituição estado da arte para alert() nativo) ===
+        function showCustomAlert(message, title = 'Aviso do Sistema', type = 'info') {
+            const modal = document.getElementById('globalAlertModal');
+            const box   = document.getElementById('globalAlertModalBox');
+            const titleEl = document.getElementById('globalAlertTitle');
+            const msgEl = document.getElementById('globalAlertMessage');
+            const iconEl = document.getElementById('globalAlertIcon');
+            const iconContainer = document.getElementById('globalAlertIconContainer');
+
+            if (!modal || !box) return;
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            if (type === 'sucesso' || type === 'success') {
+                iconEl.textContent = '✅';
+                iconContainer.className = 'w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-emerald-100';
+            } else if (type === 'erro' || type === 'error') {
+                iconEl.textContent = '⚠️';
+                iconContainer.className = 'w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-rose-100';
+            } else {
+                iconEl.textContent = 'ℹ️';
+                iconContainer.className = 'w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-blue-100';
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            setTimeout(() => box.classList.remove('scale-95'), 10);
+        }
+
+        function closeGlobalAlertModal() {
+            const modal = document.getElementById('globalAlertModal');
+            const box   = document.getElementById('globalAlertModalBox');
+            if (!modal || !box) return;
+            box.classList.add('scale-95');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => modal.classList.add('opacity-0', 'pointer-events-none'), 200);
+        }
+
+        // Sobrescreve a função nativa alert() em toda a aplicação
+        window.alert = function(msg) {
+            showCustomAlert(msg);
+        };
     </script>
 </body>
 </html>

@@ -71,8 +71,9 @@ ob_start();
             </div>
             
             <div>
-                <label for="data" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Data do Encontro</label>
-                <input id="data" type="date" name="data" value="<?= SecurityHelper::e($dataCultoVal) ?>" required class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all">
+                <label for="data_culto" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Data do Encontro</label>
+                <input id="data_culto" type="date" name="data" value="<?= SecurityHelper::e($dataCultoVal) ?>" min="<?= date('Y-m-d') ?>" required class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all">
+                <div id="dateErrorMsg" class="hidden mt-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-bold text-rose-700 flex items-center gap-2"></div>
             </div>
         </div>
 
@@ -88,10 +89,15 @@ ob_start();
                         <p class="text-[10px] text-slate-400 font-medium">Reordene os momentos usando ▲/▼ ou arrastando</p>
                     </div>
                 </div>
-                <button type="button" id="btnAddMomento" class="text-blue-600 hover:text-blue-700 font-extrabold text-xs flex items-center bg-blue-50 hover:bg-blue-100 border border-blue-100/80 px-3.5 py-2 rounded-2xl active:scale-95 transition-all shadow-xs">
-                    <svg class="w-4 h-4 mr-1" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    Add Momento
-                </button>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" id="btnGerarAuto" onclick="executarGeracaoEscalaAuto()" class="text-purple-700 hover:text-purple-800 font-extrabold text-xs flex items-center bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded-2xl active:scale-95 transition-all shadow-xs gap-1">
+                        ⚡ Gerar Escala
+                    </button>
+                    <button type="button" id="btnAddMomento" class="text-blue-600 hover:text-blue-700 font-extrabold text-xs flex items-center bg-blue-50 hover:bg-blue-100 border border-blue-100/80 px-3 py-2 rounded-2xl active:scale-95 transition-all shadow-xs">
+                        <svg class="w-4 h-4 mr-1" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Add
+                    </button>
+                </div>
             </div>
             
             <div id="momentosList" class="space-y-4">
@@ -162,7 +168,7 @@ ob_start();
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all text-sm tracking-wide mt-2">
+        <button type="submit" id="btnSalvarEscala" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all text-sm tracking-wide mt-2">
             Salvar Alterações da Liturgia
         </button>
     </form>
@@ -313,6 +319,116 @@ ob_start();
             }
         });
     });
+
+    async function executarGeracaoEscalaAuto() {
+        const momentosItems = document.querySelectorAll('.momento-item');
+        if (momentosItems.length === 0) return;
+
+        const btn = document.getElementById('btnGerarAuto');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Gerando...';
+        }
+
+        const momentosPayload = [];
+        momentosItems.forEach((item, index) => {
+            const tituloElement = item.querySelector('[name*="[titulo]"]');
+            const tituloVal = tituloElement ? tituloElement.value : '';
+            
+            momentosPayload.push({
+                idx: index,
+                titulo: tituloVal
+            });
+        });
+
+        try {
+            const response = await fetch('/escala/gerar-automatica', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ momentos: momentosPayload })
+            });
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (jsonErr) {
+                console.error("Resposta do servidor não é JSON:", text);
+                showCustomAlert("Ocorreu uma falha no servidor ao gerar a escala.", "Erro no Servidor", "erro");
+                return;
+            }
+
+            if (data.success && data.atribuicoes) {
+                data.atribuicoes.forEach((attr) => {
+                    const item = momentosItems[attr.idx];
+                    if (item) {
+                        const select = item.querySelector('select[name*="[voluntario_id]"]');
+                        if (select && attr.usuario_id) {
+                            select.value = attr.usuario_id;
+                            select.classList.add('ring-2', 'ring-purple-500', 'bg-purple-50');
+                            setTimeout(() => select.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50'), 1500);
+                        }
+                    }
+                });
+            } else if (data.message) {
+                showCustomAlert(data.message, "Aviso da Escala", "erro");
+            }
+        } catch (err) {
+            console.error("Erro ao gerar escala automática:", err);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '⚡ Gerar Escala';
+            }
+        }
+    }
+
+    // Validação estrita de Datas (Retroativas e Duplicadas)
+    const datasExistentes = <?= json_encode($datasExistentes ?? []) ?>;
+    const todayStr = '<?= date('Y-m-d') ?>';
+
+    function validarDataCulto() {
+        const dateInput = document.getElementById('data_culto');
+        const submitBtn = document.getElementById('btnSalvarEscala');
+        const errorDiv = document.getElementById('dateErrorMsg');
+
+        if (!dateInput || !submitBtn) return;
+
+        const selectedDate = dateInput.value;
+        let errorMsg = '';
+
+        if (selectedDate && selectedDate < todayStr) {
+            errorMsg = '⚠️ Não é possível alterar eventos para datas anteriores a hoje.';
+        } else if (selectedDate && datasExistentes.includes(selectedDate)) {
+            const partes = selectedDate.split('-');
+            const dataFmt = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            errorMsg = `⚠️ Já existe outro evento cadastrado para a data ${dataFmt}. Selecione outra data.`;
+        }
+
+        if (errorMsg) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            submitBtn.classList.remove('hover:from-blue-700', 'hover:to-indigo-700', 'active:scale-98');
+            if (errorDiv) {
+                errorDiv.textContent = errorMsg;
+                errorDiv.classList.remove('hidden');
+            }
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            submitBtn.classList.add('hover:from-blue-700', 'hover:to-indigo-700', 'active:scale-98');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+            }
+        }
+    }
+
+    const dateInputEl = document.getElementById('data_culto');
+    if (dateInputEl) {
+        dateInputEl.addEventListener('change', validarDataCulto);
+        dateInputEl.addEventListener('input', validarDataCulto);
+        validarDataCulto();
+    }
 </script>
 <?php 
 $content = ob_get_clean(); 

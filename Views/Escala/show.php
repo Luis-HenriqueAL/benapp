@@ -781,7 +781,7 @@ ob_start();
         const conteudo = document.getElementById('modal-endereco-conteudo');
         if (conteudo && conteudo.textContent) {
             navigator.clipboard.writeText(conteudo.textContent);
-            alert('Endereço copiado para a área de transferência!');
+            showCustomAlert('Endereço copiado para a área de transferência!', 'Copiado com Sucesso', 'sucesso');
         }
     }
 

@@ -85,7 +85,7 @@ class Usuario {
      */
     public function create($data) {
         $celula_id = (int)$data['celula_id'];
-        $isLiderPrincipal = !empty($data['is_lider_principal']) ? 1 : 0;
+        $isLiderPrincipal = !empty($data['is_lider_principal']);
 
         if ($isLiderPrincipal) {
             $this->resetLiderPrincipal($celula_id);
@@ -101,7 +101,7 @@ class Usuario {
         $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':senha', $hash);
         $stmt->bindParam(':perfil', $perfil);
-        $stmt->bindParam(':is_lider_principal', $isLiderPrincipal, PDO::PARAM_INT);
+        $stmt->bindValue(':is_lider_principal', $isLiderPrincipal, PDO::PARAM_BOOL);
 
         return $stmt->execute();
     }
@@ -115,7 +115,7 @@ class Usuario {
      * @return bool Retorna verdadeiro se for atualizado com sucesso.
      */
     public function update($celula_id, $id, $data) {
-        $isLiderPrincipal = !empty($data['is_lider_principal']) ? 1 : 0;
+        $isLiderPrincipal = !empty($data['is_lider_principal']);
 
         if ($isLiderPrincipal) {
             $this->resetLiderPrincipal($celula_id);
@@ -137,7 +137,7 @@ class Usuario {
         $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':perfil', $data['perfil']);
         $stmt->bindParam(':status', $status);
-        $stmt->bindParam(':is_lider_principal', $isLiderPrincipal, PDO::PARAM_INT);
+        $stmt->bindValue(':is_lider_principal', $isLiderPrincipal, PDO::PARAM_BOOL);
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':celula_id', $celula_id);
 
@@ -151,7 +151,7 @@ class Usuario {
      * @return bool
      */
     public function resetLiderPrincipal($celula_id) {
-        $query = "UPDATE " . $this->table_name . " SET is_lider_principal = 0 WHERE celula_id = :celula_id";
+        $query = "UPDATE " . $this->table_name . " SET is_lider_principal = FALSE WHERE celula_id = :celula_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':celula_id', $celula_id);
         return $stmt->execute();
@@ -159,14 +159,14 @@ class Usuario {
 
     /**
      * Localiza o usuário marcado como Líder Principal ativo na célula.
-     * Caso não haja nenhum com is_lider_principal = 1/true, retorna o primeiro usuário ativo com perfil 'LIDER'.
+     * Caso não haja nenhum com is_lider_principal = true, retorna o primeiro usuário ativo com perfil 'LIDER'.
      * Caso ainda assim não haja, retorna o primeiro usuário ativo da célula.
      *
      * @param int $celula_id Identificador da célula.
      * @return array|false Dados do usuário líder principal.
      */
     public function findLiderPrincipalByCelula($celula_id) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE celula_id = :celula_id AND is_lider_principal = 1 AND (status = 'ativo' OR status IS NULL) LIMIT 1";
+        $query = "SELECT * FROM " . $this->table_name . " WHERE celula_id = :celula_id AND (is_lider_principal = TRUE OR is_lider_principal = '1') AND (status = 'ativo' OR status IS NULL) LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':celula_id', $celula_id);
         $stmt->execute();

@@ -112,4 +112,50 @@ class Liturgia {
         $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    /**
+     * Busca uma liturgia cadastrada para uma data de culto específica na célula.
+     *
+     * @param int $celula_id Identificador do tenant.
+     * @param string $data_culto Data do culto (Y-m-d).
+     * @param int|null $ignore_id Opcional ID da liturgia a ignorar (em caso de edição).
+     * @return array|false Dados da liturgia ou false se não for encontrada.
+     */
+    public function findByDataCulto($celula_id, $data_culto, $ignore_id = null) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE celula_id = :celula_id AND DATE(data_culto) = DATE(:data_culto)";
+        if ($ignore_id) {
+            $query .= " AND id != :ignore_id";
+        }
+        $query .= " LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
+        $stmt->bindParam(':data_culto', $data_culto);
+        if ($ignore_id) {
+            $stmt->bindParam(':ignore_id', $ignore_id, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Retorna um array com todas as datas (Y-m-d) de eventos/liturgias já cadastrados para a célula.
+     *
+     * @param int $celula_id Identificador da célula.
+     * @param int|null $ignore_id ID da liturgia atual (para ignorar na edição).
+     * @return array Lista de datas no formato 'Y-m-d'.
+     */
+    public function getDatasCultoExistentes($celula_id, $ignore_id = null) {
+        $query = "SELECT DATE(data_culto) as data_fmt FROM " . $this->table_name . " WHERE celula_id = :celula_id";
+        if ($ignore_id) {
+            $query .= " AND id != :ignore_id";
+        }
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':celula_id', $celula_id, PDO::PARAM_INT);
+        if ($ignore_id) {
+            $stmt->bindParam(':ignore_id', $ignore_id, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_column($rows, 'data_fmt');
+    }
 }
