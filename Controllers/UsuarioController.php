@@ -91,12 +91,15 @@ class UsuarioController {
             exit;
         }
 
+        $is_lider_principal = !empty($_POST['is_lider_principal']) ? 1 : 0;
+
         $this->usuarioModel->create([
             'celula_id' => $celula_id,
             'nome' => $nome,
             'email' => $email,
             'senha' => $senha,
-            'perfil' => $perfil
+            'perfil' => $perfil,
+            'is_lider_principal' => $is_lider_principal
         ]);
 
         header("Location: /usuarios");
@@ -177,13 +180,15 @@ class UsuarioController {
             exit;
         }
 
-        // Apenas admins com usuarios.manage podem alterar perfil e status de usuários
+        // Apenas admins com usuarios.manage podem alterar perfil, status e is_lider_principal de usuários
         if (SecurityHelper::hasPermissao('usuarios.manage')) {
             $perfil = trim($_POST['perfil'] ?? $existing['perfil']);
             $status = trim($_POST['status'] ?? $existing['status']);
+            $is_lider_principal = !empty($_POST['is_lider_principal']) ? 1 : 0;
         } else {
             $perfil = $existing['perfil'];
             $status = $existing['status'];
+            $is_lider_principal = (int)($existing['is_lider_principal'] ?? 0);
         }
 
         if ($current_user_id && (int)$id === (int)$current_user_id && $status === 'inativo') {
@@ -197,6 +202,7 @@ class UsuarioController {
             'email' => $email,
             'perfil' => $perfil,
             'status' => $status,
+            'is_lider_principal' => $is_lider_principal,
             'senha' => $senha
         ]);
 

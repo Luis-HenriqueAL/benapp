@@ -83,6 +83,16 @@ ob_start();
                 <?php endif; ?>
             </div>
 
+            <?php if ($canManage): ?>
+            <div class="p-3.5 bg-blue-50/70 border border-blue-100 rounded-2xl flex items-start gap-3 mt-1">
+                <input type="checkbox" id="is_lider_principal" name="is_lider_principal" value="1" <?= !empty($usuario['is_lider_principal']) ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 mt-0.5 shrink-0">
+                <label for="is_lider_principal" class="text-xs font-bold text-slate-800 cursor-pointer select-none">
+                    ⭐ Líder Principal da Célula
+                    <span class="block text-[10px] font-normal text-slate-500 leading-tight mt-0.5">Receberá automaticamente as atribuições de Louvor e Palavra na geração de escala.</span>
+                </label>
+            </div>
+            <?php endif; ?>
+
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all text-sm tracking-wide mt-4">
                 Salvar Alterações
             </button>

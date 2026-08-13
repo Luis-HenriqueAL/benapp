@@ -21,51 +21,6 @@ class LiturgiaMusica {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação da tabela liturgia_musicas no PostgreSQL / SQLite.
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS liturgia_musicas (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        liturgia_id INT NOT NULL,
-                        momento_titulo VARCHAR(255) NULL,
-                        titulo VARCHAR(255) NOT NULL,
-                        artista VARCHAR(255) NULL,
-                        tom VARCHAR(10) NULL,
-                        cifraclub_url VARCHAR(500) NULL,
-                        cifra_texto TEXT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS liturgia_musicas (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        liturgia_id INT NOT NULL,
-                        momento_titulo VARCHAR(255) NULL,
-                        titulo VARCHAR(255) NOT NULL,
-                        artista VARCHAR(255) NULL,
-                        tom VARCHAR(10) NULL,
-                        cifraclub_url VARCHAR(500) NULL,
-                        cifra_texto TEXT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-            }
-        } catch (\PDOException $e) {
-            // Ignora se tabela já existir
-        }
     }
 
     /**

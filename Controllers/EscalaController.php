@@ -348,4 +348,43 @@ class EscalaController {
 
         return true;
     }
+
+    /**
+     * Endpoint AJAX para gerar atribuições automáticas inteligentes para os momentos da liturgia.
+     * Retorna JSON com as atribuições sugeridas.
+     *
+     * @return void
+     */
+    public function gerarAutomatica() {
+        header('Content-Type: application/json');
+
+        if (!\Helpers\SecurityHelper::hasPermissao('escala.create')) {
+            echo json_encode(['success' => false, 'message' => 'Sem permissão para gerar escala.']);
+            exit;
+        }
+
+        $celula_id = $_SESSION['celula_id'] ?? 1;
+
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+
+        if (!$data || empty($data['momentos'])) {
+            $data = $_POST;
+        }
+
+        $momentos = $data['momentos'] ?? [];
+
+        if (empty($momentos)) {
+            $momentos = $this->escalaModel->getMomentosPredefinidos($celula_id);
+        }
+
+        $generator = new \Services\EscalaGeneratorService();
+        $atribuicoes = $generator->gerarAtribuicoes($celula_id, $momentos);
+
+        echo json_encode([
+            'success' => true,
+            'atribuicoes' => $atribuicoes
+        ]);
+        exit;
+    }
 }

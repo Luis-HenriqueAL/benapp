@@ -80,10 +80,15 @@ ob_start();
                         <p class="text-[10px] text-slate-400 font-medium">Reordene os momentos usando ▲/▼ ou arrastando</p>
                     </div>
                 </div>
-                <button type="button" id="btnAddMomento" class="text-blue-600 hover:text-blue-700 font-extrabold text-xs flex items-center bg-blue-50 hover:bg-blue-100 border border-blue-100/80 px-3.5 py-2 rounded-2xl active:scale-95 transition-all shadow-xs">
-                    <svg class="w-4 h-4 mr-1" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    Add Momento
-                </button>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" id="btnGerarAuto" onclick="executarGeracaoEscalaAuto()" class="text-purple-700 hover:text-purple-800 font-extrabold text-xs flex items-center bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded-2xl active:scale-95 transition-all shadow-xs gap-1">
+                        ⚡ Gerar Escala
+                    </button>
+                    <button type="button" id="btnAddMomento" class="text-blue-600 hover:text-blue-700 font-extrabold text-xs flex items-center bg-blue-50 hover:bg-blue-100 border border-blue-100/80 px-3 py-2 rounded-2xl active:scale-95 transition-all shadow-xs">
+                        <svg class="w-4 h-4 mr-1" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Add
+                    </button>
+                </div>
             </div>
             
             <div id="momentosList" class="space-y-4">
@@ -301,6 +306,61 @@ ob_start();
             }
         });
     });
+
+    async function executarGeracaoEscalaAuto() {
+        const momentosItems = document.querySelectorAll('.momento-item');
+        if (momentosItems.length === 0) return;
+
+        const btn = document.getElementById('btnGerarAuto');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Gerando...';
+        }
+
+        const momentosPayload = [];
+        momentosItems.forEach((item, index) => {
+            const tituloInput = item.querySelector('input[name*="[titulo]"]');
+            const isLouvorBadge = item.querySelector('.bg-purple-100');
+            const isPalavraBadge = item.querySelector('.bg-blue-100');
+            
+            momentosPayload.push({
+                idx: index,
+                titulo: tituloInput ? tituloInput.value : '',
+                is_louvor: !!isLouvorBadge,
+                is_palavra: !!isPalavraBadge
+            });
+        });
+
+        try {
+            const response = await fetch('/escala/gerar-automatica', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ momentos: momentosPayload })
+            });
+            const data = await response.json();
+
+            if (data.success && data.atribuicoes) {
+                data.atribuicoes.forEach((attr) => {
+                    const item = momentosItems[attr.idx];
+                    if (item) {
+                        const select = item.querySelector('select[name*="[voluntario_id]"]');
+                        if (select && attr.usuario_id) {
+                            select.value = attr.usuario_id;
+                            select.classList.add('ring-2', 'ring-purple-500', 'bg-purple-50');
+                            setTimeout(() => select.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50'), 1500);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Erro ao gerar escala automática:", err);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '⚡ Gerar Escala';
+            }
+        }
+    }
 </script>
 <?php 
 $content = ob_get_clean(); 

@@ -13,12 +13,13 @@ spl_autoload_register(function ($class) {
 
 // Capturador Global de Erros para nunca exibir tela branca com exceção pura
 set_exception_handler(function ($e) {
-    $_SESSION['flash_error'] = $e->getMessage();
+    $userMsg = \Helpers\SecurityHelper::formatUserErrorMessage($e);
+    $_SESSION['flash_error'] = $userMsg;
     if (isset($_SERVER['HTTP_REFERER']) && !empty($_SERVER['HTTP_REFERER'])) {
         header("Location: " . $_SERVER['HTTP_REFERER']);
         exit;
     } else {
-        $errorMessage = $e->getMessage();
+        $errorMessage = $userMsg;
         require_once __DIR__ . '/../Views/errors/500.php';
         exit;
     }
@@ -145,6 +146,10 @@ if ($uri === '/' || $uri === '' || $uri === '/escala') {
         header("Location: /escala");
         exit;
     }
+} elseif ($uri === '/escala/gerar-automatica') {
+    $controller = new \Controllers\EscalaController();
+    $controller->gerarAutomatica();
+    exit;
 } elseif ($uri === '/escala/show' || preg_match('/^\/escala\/\d+$/', $uri)) {
     $controller = new \Controllers\EscalaController();
     $controller->show();

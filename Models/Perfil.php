@@ -39,57 +39,6 @@ class Perfil {
      */
     public function __construct() {
         $this->conn = Database::getConnection();
-        $this->ensureSchema();
-    }
-
-    /**
-     * Garante a criação das tabelas de perfis e permissões no banco de dados (idempotente).
-     *
-     * @return void
-     */
-    private function ensureSchema() {
-        try {
-            $driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            if ($driver === 'sqlite') {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS perfis (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        nome VARCHAR(100) NOT NULL,
-                        descricao TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS perfil_permissoes (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        perfil_id INT NOT NULL,
-                        chave_permissao VARCHAR(100) NOT NULL,
-                        UNIQUE(perfil_id, chave_permissao)
-                    );
-                ");
-            } else {
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS perfis (
-                        id SERIAL PRIMARY KEY,
-                        celula_id INT NOT NULL DEFAULT 1,
-                        nome VARCHAR(100) NOT NULL,
-                        descricao TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                ");
-                $this->conn->exec("
-                    CREATE TABLE IF NOT EXISTS perfil_permissoes (
-                        id SERIAL PRIMARY KEY,
-                        perfil_id INT NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
-                        chave_permissao VARCHAR(100) NOT NULL,
-                        CONSTRAINT uq_perfil_permissao UNIQUE (perfil_id, chave_permissao)
-                    );
-                ");
-            }
-        } catch (\PDOException $e) {
-            // Ignora se tabelas já existirem
-        }
     }
 
     /**

@@ -22,8 +22,13 @@
 - **Controle de Acesso RBAC**: Perfis de **Líder** e **Membro** com matriz dinâmica de permissões.
 
 ### 📅 2. Liturgia Dinâmica & Escala Semanal
-- **Momentos Personalizados**: Crie e ordene momentos do encontro (Quebra-gelo, Louvor, Estudo, Oração, Jantar, etc.).
-- **Escala de Responsabilidades**: Vincule voluntários a funções específicas para cada data com registro de histórico.
+- **Momentos Personalizados**: Crie e ordene momentos do encontro com suporte a marcações de **Louvor** (`is_louvor`) e **Palavra/Estudo** (`is_palavra`).
+- **Geração Automática de Escalas (⚡ Sorteio Inteligente)**: Botão de geração automática que sorteia voluntários ativos promovendo rotatividade justa sem repetições consecutivas e atribuindo momentos de Louvor e Palavra ao **Líder Principal** da célula.
+- **Escala de Responsabilidades**: Vincule voluntários a funções específicas para cada data com total liberdade para ajustes manuais.
+
+### 🛡️ 3. Controle de Exibição de Erros (`APP_DEBUG`)
+- **Sanitização para Produção**: Configuração de `APP_DEBUG=false` no `.env` para ocultar erros internos de SQL/banco de dados (`PDOException`, `SQLSTATE`) e exibir mensagens amigáveis e seguras ao usuário final.
+- **Modo Desenvolvimento**: Com `APP_DEBUG=true`, os detalhes técnicos completos das exceções são mantidos para acelerar a depuração durante o desenvolvimento.
 
 ### 🎵 3. Visualizador Avançado de Cifras e Letras
 - **Integração Automática com Cifra Club**: Busca e importa cifras completas automaticamente via microserviço Python dedicado.

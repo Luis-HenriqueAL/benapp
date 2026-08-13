@@ -2,6 +2,16 @@
 
 Histórico de alterações e versões do projeto benApp.
 
+## [2.2.0] - Geração Automática de Escala, Flags de Líder Principal/Palavra e Controle de Erros por .env
+### Adicionado
+- **Controle de Erros Sanitizado via `.env` (`APP_DEBUG`)**: Adicionada a variável `APP_DEBUG` no [.env](file:///home/luis/dev/projetos/benApp/.env) e [.env.example](file:///home/luis/dev/projetos/benApp/.env.example). Quando `APP_DEBUG=false`, exceções e mensagens técnicas de banco de dados (`PDOException`, `SQLSTATE`) são ocultadas do usuário final e substituídas por avisos seguros.
+- **Sorteio e Geração Automática de Escalas**: Criado o serviço [EscalaGeneratorService.php](file:///home/luis/dev/projetos/benApp/Services/EscalaGeneratorService.php) e a rota `/escala/gerar-automatica` que distribui voluntários com rotação justa e atribui compulsoriamente Louvor e Palavra ao Líder Principal.
+- **Flag Líder Principal**: Adicionado o campo `is_lider_principal` no cadastro e edição de voluntários em [Views/usuarios/create.php](file:///home/luis/dev/projetos/benApp/Views/usuarios/create.php) e [Views/usuarios/edit.php](file:///home/luis/dev/projetos/benApp/Views/usuarios/edit.php).
+- **Flag É Palavra**: Adicionado o campo e badge `is_palavra` no gerenciamento de momentos litúrgicos em [Views/liturgia/momentos.php](file:///home/luis/dev/projetos/benApp/Views/liturgia/momentos.php).
+- **Remoção Estrita de `ensureSchema()`**: Removidas todas as funções runtime de DDL dos models PHP, centralizando a inicialização de tabelas e colunas exclusivamente nos arquivos SQL do container ([db/init.sql](file:///home/luis/dev/projetos/benApp/db/init.sql) e [db/schema_sqlite.sql](file:///home/luis/dev/projetos/benApp/db/schema_sqlite.sql)).
+
+---
+
 ## [2.1.1] - Exibição dos Nomes de Líderes e Anfitriões no Detalhe da Escala
 ### Adicionado
 - **Líderes e Anfitriões na Escala**: Incluída a renderização dinâmica dos nomes dos Líderes e Anfitriões cadastrados na célula logo abaixo do nome da célula em [Views/Escala/show.php](file:///home/luis/dev/projetos/benApp/Views/Escala/show.php).

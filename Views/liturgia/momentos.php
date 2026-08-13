@@ -49,10 +49,14 @@ unset($_SESSION['flash_success']);
                     Adicionar
                 </button>
             </div>
-            <div class="flex items-center gap-2 pt-1">
-                <input type="checkbox" id="is_louvor" name="is_louvor" value="1" class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500">
-                <label for="is_louvor" class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer">
-                    <span>🎵 Este momento envolve Louvor / Músicas (com cifras)</span>
+            <div class="flex flex-wrap items-center gap-4 pt-1">
+                <label for="is_louvor" class="text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="is_louvor" name="is_louvor" value="1" class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500">
+                    <span>🎵 Louvor / Músicas</span>
+                </label>
+                <label for="is_palavra" class="text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="is_palavra" name="is_palavra" value="1" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                    <span>📖 Estudo / Palavra</span>
                 </label>
             </div>
         </form>
@@ -71,14 +75,17 @@ unset($_SESSION['flash_success']);
             <?php foreach ($momentos as $m): ?>
                 <div class="bg-white rounded-3xl shadow-lg shadow-slate-200/40 border border-slate-100 p-4 flex justify-between items-center active:scale-[0.99] transition-all">
                     <div class="flex items-center space-x-3">
-                        <div class="w-9 h-9 rounded-2xl <?= !empty($m['is_louvor']) ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-600 border-blue-100' ?> flex items-center justify-center font-extrabold text-xs border">
-                            <?= !empty($m['is_louvor']) ? '🎵' : '#' . SecurityHelper::e($m['ordem']) ?>
+                        <div class="w-9 h-9 rounded-2xl <?= !empty($m['is_louvor']) ? 'bg-purple-100 text-purple-700 border-purple-200' : (!empty($m['is_palavra']) ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-50 text-slate-600 border-slate-100') ?> flex items-center justify-center font-extrabold text-xs border">
+                            <?= !empty($m['is_louvor']) ? '🎵' : (!empty($m['is_palavra']) ? '📖' : '#' . SecurityHelper::e($m['ordem'])) ?>
                         </div>
                         <div>
                             <h4 class="text-sm font-extrabold text-slate-900 leading-snug"><?= SecurityHelper::e($m['titulo']) ?></h4>
-                            <div class="flex items-center gap-1.5 mt-0.5">
+                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                 <?php if (!empty($m['is_louvor'])): ?>
                                     <span class="inline-block text-[9px] font-extrabold uppercase tracking-wider text-purple-700 bg-purple-100 border border-purple-200 px-1.5 py-0.5 rounded-md">🎵 Louvor</span>
+                                <?php endif; ?>
+                                <?php if (!empty($m['is_palavra'])): ?>
+                                    <span class="inline-block text-[9px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded-md">📖 Palavra</span>
                                 <?php endif; ?>
                                 <?php if (!empty($m['obrigatorio'])): ?>
                                     <span class="inline-block text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-md">Obrigatório</span>

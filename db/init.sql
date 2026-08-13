@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
     perfil VARCHAR(50) NOT NULL DEFAULT 'MEMBRO',
-    status VARCHAR(20) NOT NULL DEFAULT 'ativo'
+    status VARCHAR(20) NOT NULL DEFAULT 'ativo',
+    is_lider_principal BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS perfis (
@@ -60,7 +61,9 @@ CREATE TABLE IF NOT EXISTS momentos_liturgia (
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL REFERENCES liturgias(id) ON DELETE CASCADE,
     tipo VARCHAR(100) NOT NULL,
-    detalhes TEXT
+    detalhes TEXT,
+    is_louvor BOOLEAN DEFAULT FALSE,
+    is_palavra BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS momentos_predefinidos (
@@ -71,6 +74,7 @@ CREATE TABLE IF NOT EXISTS momentos_predefinidos (
     duracao_minutos INT DEFAULT 15,
     obrigatorio BOOLEAN DEFAULT FALSE,
     is_louvor BOOLEAN DEFAULT FALSE,
+    is_palavra BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -124,16 +128,16 @@ AFTER INSERT ON liturgias
 FOR EACH ROW EXECUTE FUNCTION trg_liturgia_estudo();
 
 -- Seeds Iniciais
-INSERT INTO usuarios (celula_id, nome, email, senha, perfil)
+INSERT INTO usuarios (celula_id, nome, email, senha, perfil, is_lider_principal)
 VALUES 
-(1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER'),
-(1, 'Voluntário João', 'joao@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'MEMBRO')
+(1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER', TRUE),
+(1, 'Voluntário João', 'joao@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'MEMBRO', FALSE)
 ON CONFLICT (email) DO NOTHING;
 
-INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio, is_louvor)
+INSERT INTO momentos_predefinidos (celula_id, titulo, ordem, duracao_minutos, obrigatorio, is_louvor, is_palavra)
 VALUES
-(1, 'Quebra-Gelo / Recepção', 1, 15, FALSE, FALSE),
-(1, 'Louvor e Adoração', 2, 20, FALSE, TRUE),
-(1, 'Estudo / Palavra', 3, 40, TRUE, FALSE),
-(1, 'Oração e Avisos', 4, 15, FALSE, FALSE)
+(1, 'Quebra-Gelo / Recepção', 1, 15, FALSE, FALSE, FALSE),
+(1, 'Louvor e Adoração', 2, 20, FALSE, TRUE, FALSE),
+(1, 'Estudo / Palavra', 3, 40, TRUE, FALSE, TRUE),
+(1, 'Oração e Avisos', 4, 15, FALSE, FALSE, FALSE)
 ON CONFLICT DO NOTHING;

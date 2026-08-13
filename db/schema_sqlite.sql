@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
     perfil VARCHAR(50) NOT NULL DEFAULT 'MEMBRO',
-    status VARCHAR(20) NOT NULL DEFAULT 'ativo'
+    status VARCHAR(20) NOT NULL DEFAULT 'ativo',
+    is_lider_principal INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS perfis (
@@ -59,7 +60,9 @@ CREATE TABLE IF NOT EXISTS momentos_liturgia (
     celula_id INT NOT NULL DEFAULT 1,
     liturgia_id INT NOT NULL REFERENCES liturgias(id) ON DELETE CASCADE,
     tipo VARCHAR(100) NOT NULL,
-    detalhes TEXT
+    detalhes TEXT,
+    is_louvor INTEGER DEFAULT 0,
+    is_palavra INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS momentos_predefinidos (
@@ -69,7 +72,8 @@ CREATE TABLE IF NOT EXISTS momentos_predefinidos (
     ordem INT NOT NULL DEFAULT 0,
     duracao_minutos INT DEFAULT 15,
     obrigatorio BOOLEAN DEFAULT FALSE,
-    is_louvor BOOLEAN DEFAULT FALSE,
+    is_louvor INTEGER DEFAULT 0,
+    is_palavra INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -109,5 +113,5 @@ CREATE TABLE IF NOT EXISTS liturgia_musicas (
 );
 
 -- Seeds Iniciais
-INSERT OR IGNORE INTO usuarios (celula_id, nome, email, senha, perfil)
-VALUES (1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER');
+INSERT OR IGNORE INTO usuarios (celula_id, nome, email, senha, perfil, is_lider_principal)
+VALUES (1, 'Líder Principal', 'admin@celula.com', '$2y$10$qDRL6sLNw6GMxZ05oketB.CNiy.fkpYpTpfXaw96hXRwqvwW3TR/q', 'LIDER', 1);
